@@ -1,4 +1,5 @@
 import React from 'react';
+import { PartnerForm } from '../components/forms/PartnerForm';
 import { useStore } from '../context/StoreContext';
 import { ArrowRight, ArrowUpRight, Globe, Maximize2, Users, X } from 'lucide-react';
 import { PARTNERS, INFLUENCERS, PARTNERS_HERO_IMAGE, Partner, PartnerLink } from '../data/partners';
@@ -395,28 +396,30 @@ export const PartnersPage: React.FC = () => {
         )}
       </section>
 
-      {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-8 items-end">
-          <div className="min-w-0">
+      {/* CTA + formularz współpracy */}
+      <section id="samenwerken" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 items-start">
+          <div className="min-w-0 lg:sticky lg:top-28">
             <h2 className="font-bebas text-5xl sm:text-6xl tracking-wide leading-none">{c('ctaTitle')}</h2>
             <p className="mt-4 text-sm sm:text-base text-neutral-400 max-w-xl leading-relaxed">{c('ctaText')}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => navigate('/contact')}
-              className="px-7 py-3.5 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-sm uppercase tracking-widest inline-flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              {c('ctaContact')}
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <ul className="mt-6 space-y-2 text-sm text-neutral-300">
+              {(lang === 'pl'
+                ? ['Sprzęt i odzież Octagon dla klubów i drużyn', 'Współpraca z zawodnikami, trenerami i twórcami', 'Wspólne akcje, gale i wydarzenia']
+                : lang === 'en'
+                ? ['Octagon gear and apparel for clubs and teams', 'Collaborations with fighters, coaches and creators', 'Joint campaigns, fight nights and events']
+                : ['Octagon-gear en kleding voor clubs en teams', 'Samenwerkingen met vechters, trainers en creators', 'Samen acties, gala’s en evenementen']
+              ).map(item => (
+                <li key={item} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#D71920]" aria-hidden="true" />{item}</li>
+              ))}
+            </ul>
             <button
               onClick={() => navigate('/clubs')}
-              className="px-7 py-3.5 border border-neutral-700 hover:border-white text-white font-condensed font-bold text-sm uppercase tracking-widest transition-colors cursor-pointer"
+              className="mt-6 inline-flex items-center gap-2 text-xs font-condensed font-bold uppercase tracking-widest text-neutral-300 hover:text-white"
             >
-              {c('ctaClubs')}
+              {c('ctaClubs')} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+          <PartnerForm lang={lang} />
         </div>
       </section>
     </div>

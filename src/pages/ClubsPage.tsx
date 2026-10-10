@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { submitForm } from '../lib/forms';
 import { useStore } from '../context/StoreContext';
 import { Award, Shield, Check, Send, Users, Sparkles, PhoneCall } from 'lucide-react';
 import { HERO_IMAGE, RASHGUARD_IMAGE } from '../data/productImages';
@@ -17,16 +18,31 @@ export const ClubsPage: React.FC = () => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    showToast(
-      language === 'pl'
-        ? 'Wycena dla klubu przesłana pomyślnie! Odpowiemy w 24 godziny.'
-        : language === 'en'
-        ? 'Club inquiry received! Our representative will contact you within 24 hours.'
-        : 'Clubaanvraag succesvol verzonden! Wij nemen binnen 24 uur contact op.'
-    );
+    if (sending) return;
+    setSending(true);
+    const ok = await submitForm('clubs', { ...formData, language });
+    setSending(false);
+    if (ok) {
+      setSubmitted(true);
+      showToast(
+        language === 'pl'
+          ? 'Zapytanie klubu wysłane! Odezwiemy się najszybciej, jak to możliwe.'
+          : language === 'en'
+          ? 'Club inquiry sent! We will get back to you as soon as possible.'
+          : 'Clubaanvraag verzonden! We nemen zo snel mogelijk contact met je op.'
+      );
+    } else {
+      showToast(
+        language === 'pl'
+          ? 'Nie udało się wysłać. Spróbuj ponownie albo napisz na WhatsApp / shop@octagonsport.nl.'
+          : language === 'en'
+          ? 'Sending failed. Please try again or contact us via WhatsApp / shop@octagonsport.nl.'
+          : 'Versturen is mislukt. Probeer het opnieuw of neem contact op via WhatsApp / shop@octagonsport.nl.'
+      );
+    }
   };
 
   return (
@@ -218,7 +234,8 @@ export const ClubsPage: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
+                disabled={sending}
+                className="disabled:opacity-60 w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
               >
                 <Send className="w-4 h-4" />
                 <span>{t('clubs.submitBtn')}</span>

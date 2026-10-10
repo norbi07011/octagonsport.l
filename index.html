@@ -22,6 +22,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#050505] text-[#FFFFFF] antialiased selection:bg-[#D71920] selection:text-white">
+    <!-- Netlify Forms: ukryte formularze, żeby Netlify wykrył pola (prawdziwe formularze są w React) -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="bot-field" /><input name="name" /><input name="email" /><input name="department" /><input name="orderNumber" /><textarea name="message"></textarea><input name="language" />
+    </form>
+    <form name="clubs" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="bot-field" /><input name="clubName" /><input name="contactPerson" /><input name="email" /><input name="phone" /><input name="athletesCount" /><input name="discipline" /><input name="productsRequired" /><textarea name="message"></textarea><input name="language" />
+    </form>
+    <form name="wholesale" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="bot-field" /><input name="company" /><input name="kvk" /><input name="vat" /><input name="address" /><input name="website" /><input name="contactPerson" /><input name="phone" /><input name="email" /><input name="volume" /><textarea name="message"></textarea><input name="language" />
+    </form>
+    <form name="partner" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="bot-field" /><input name="type" /><input name="name" /><input name="organisation" /><input name="email" /><input name="phone" /><input name="city" /><input name="social" /><textarea name="message"></textarea><input name="language" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

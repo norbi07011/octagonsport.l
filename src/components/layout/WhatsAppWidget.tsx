@@ -63,7 +63,9 @@ const inputCls =
   'w-full bg-[#141414] border border-neutral-800 px-3 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-[#25D366]';
 
 export const WhatsAppWidget: React.FC = () => {
-  const { language, comparison } = useStore();
+  const { language, comparison, currentPath } = useStore();
+  // Pływający przycisk tylko na stronie Kontakt; okno z formularzem działa wszędzie (openWhatsApp).
+  const showButton = currentPath.split('?')[0] === '/contact';
   const lang = (language === 'pl' || language === 'en' ? language : 'nl') as L;
   const [open, setOpen] = React.useState(false);
   const [f, setF] = React.useState({ topic: 'order' as WaTopic, product: '', qty: '1', orderNo: '', postcode: '', city: '', name: '', msg: '' });
@@ -115,7 +117,8 @@ export const WhatsAppWidget: React.FC = () => {
 
   return (
     <>
-      {/* pływający przycisk */}
+      {/* pływający przycisk – tylko na stronie Kontakt */}
+      {showButton && (
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -125,9 +128,9 @@ export const WhatsAppWidget: React.FC = () => {
           comparison.length > 0 ? 'bottom-28' : 'bottom-5 sm:bottom-6'
         }`}
       >
-        <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-40 motion-safe:animate-ping [animation-duration:2.5s]" aria-hidden="true" />
         <WhatsAppIcon className="relative h-7 w-7" />
       </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/60 backdrop-blur-[2px] sm:items-end sm:justify-end sm:bg-transparent sm:backdrop-blur-0 sm:p-6" onClick={() => setOpen(false)}>

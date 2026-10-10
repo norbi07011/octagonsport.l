@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { submitForm } from '../lib/forms';
 import { openWhatsApp, WhatsAppIcon } from '../components/layout/WhatsAppWidget';
 import { COMPANY } from '../config/company';
 import { useStore } from '../context/StoreContext';
@@ -15,10 +16,27 @@ export const ContactPage: React.FC = () => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    showToast(t('contact.sentSuccess'));
+    if (sending) return;
+    setSending(true);
+    const ok = await submitForm('contact', { ...formData, language });
+    setSending(false);
+    if (ok) {
+      setSubmitted(true);
+      showToast(
+        t('contact.sentSuccess')
+      );
+    } else {
+      showToast(
+        language === 'pl'
+          ? 'Nie udało się wysłać. Spróbuj ponownie albo napisz na WhatsApp / shop@octagonsport.nl.'
+          : language === 'en'
+          ? 'Sending failed. Please try again or contact us via WhatsApp / shop@octagonsport.nl.'
+          : 'Versturen is mislukt. Probeer het opnieuw of neem contact op via WhatsApp / shop@octagonsport.nl.'
+      );
+    }
   };
 
   const departments = [
@@ -78,7 +96,7 @@ export const ContactPage: React.FC = () => {
                   <p className="font-condensed font-bold uppercase text-white">{t('contact.email')}</p>
                   <p className="text-neutral-400 font-mono mt-0.5"><a href={`mailto:${COMPANY.email}`} className="hover:text-white">{COMPANY.email}</a></p>
                   <p className="text-[11px] text-neutral-500">
-                    {language === 'pl' ? 'Odpowiedź w ciągu 4 godzin roboczych' : language === 'en' ? 'Response within 4 business hours' : 'Reactie binnen 4 werkuren'}
+                    {language === 'pl' ? 'Odpowiadamy najszybciej, jak to możliwe' : language === 'en' ? 'We reply as soon as possible' : 'We reageren zo snel mogelijk'}
                   </p>
                 </div>
               </div>
@@ -210,7 +228,8 @@ export const ContactPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
+                  disabled={sending}
+                  className="disabled:opacity-60 w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
                 >
                   <Send className="w-4 h-4" />
                   <span>{t('contact.sendBtn')}</span>

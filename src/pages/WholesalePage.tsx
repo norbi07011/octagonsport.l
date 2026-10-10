@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { submitForm } from '../lib/forms';
 import { useStore } from '../context/StoreContext';
 import { Building2, Check, Send } from 'lucide-react';
 
@@ -20,16 +21,31 @@ export const WholesalePage: React.FC = () => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    showToast(
-      language === 'pl'
-        ? 'Wniosek B2B złożony! Zweryfikujemy NIP/VAT w 24 godziny.'
-        : language === 'en'
-        ? 'B2B application submitted! We will verify your registration and respond within 24 hours.'
-        : 'B2B aanvraag ingediend! We verifiëren je KvK nummer binnen 24u.'
-    );
+    if (sending) return;
+    setSending(true);
+    const ok = await submitForm('wholesale', { ...form, language });
+    setSending(false);
+    if (ok) {
+      setSubmitted(true);
+      showToast(
+        language === 'pl'
+          ? 'Wniosek B2B wysłany! Odezwiemy się najszybciej, jak to możliwe.'
+          : language === 'en'
+          ? 'B2B application sent! We will get back to you as soon as possible.'
+          : 'B2B-aanvraag verzonden! We nemen zo snel mogelijk contact met je op.'
+      );
+    } else {
+      showToast(
+        language === 'pl'
+          ? 'Nie udało się wysłać. Spróbuj ponownie albo napisz na WhatsApp / shop@octagonsport.nl.'
+          : language === 'en'
+          ? 'Sending failed. Please try again or contact us via WhatsApp / shop@octagonsport.nl.'
+          : 'Versturen is mislukt. Probeer het opnieuw of neem contact op via WhatsApp / shop@octagonsport.nl.'
+      );
+    }
   };
 
 
@@ -73,9 +89,9 @@ export const WholesalePage: React.FC = () => {
                 </h3>
                 <p className="text-xs text-neutral-300">
                   {language === 'pl'
-                    ? `Dziękujemy ${form.contactPerson} (${form.company}). Nasz dział handlowy skontaktuje się w ciągu 24h.`
+                    ? `Dziękujemy ${form.contactPerson} (${form.company}). Odezwiemy się najszybciej, jak to możliwe.`
                     : language === 'en'
-                    ? `Thank you ${form.contactPerson} (${form.company}). Our B2B sales team will reach out within 24 hours.`
+                    ? `Thank you ${form.contactPerson} (${form.company}). We will get back to you as soon as possible.`
                     : `Bedankt ${form.contactPerson} (${form.company}). We nemen spoedig contact met je op.`}
                 </p>
               </div>
@@ -200,7 +216,8 @@ export const WholesalePage: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
+                  disabled={sending}
+                  className="disabled:opacity-60 w-full py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-colors mt-2"
                 >
                   <Send className="w-4 h-4" />
                   <span>{t('wholesale.submitBtn')}</span>
