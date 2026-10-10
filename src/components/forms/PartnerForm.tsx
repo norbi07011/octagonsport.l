@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2 } from 'lucide-react';
 import { submitForm } from '../../lib/forms';
-import { openWhatsApp } from '../layout/WhatsAppWidget';
+import { openWhatsApp, WHATSAPP_NUMBER } from '../layout/WhatsAppWidget';
 
 type L = 'nl' | 'en' | 'pl';
 
@@ -25,21 +25,45 @@ export const PartnerForm: React.FC<{ lang: L }> = ({ lang }) => {
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setF(prev => ({ ...prev, [k]: e.target.value }));
 
-  const send = async (e: React.FormEvent) => {
+  const send = (e: React.FormEvent) => {
     e.preventDefault();
-    setState('sending');
-    const ok = await submitForm('partner', { ...f, type: TYPES.find(t => t.id === f.type)?.label.nl || f.type, language: lang });
-    setState(ok ? 'sent' : 'error');
+    const typeLabel = TYPES.find(t => t.id === f.type)?.label[lang] || f.type;
+    const row = (label: string, value: string) => (value.trim() ? [`${label}: ${value.trim()}`] : []);
+    const lines = [
+      `*${tr('Partner aanmelding', 'Partner application', 'Zgłoszenie do współpracy')} – OctagonSportNL*`,
+      '',
+      ...row(tr('Ik ben', 'I am', 'Jestem'), typeLabel),
+      ...row(tr('Naam', 'Name', 'Imię i nazwisko'), f.name),
+      ...row(tr('Club / bedrijf / kanaal', 'Club / business / channel', 'Klub / firma / kanał'), f.organisation),
+      ...row('E-mail', f.email),
+      ...row(tr('Telefoon', 'Phone', 'Telefon'), f.phone),
+      ...row(tr('Plaats', 'City', 'Miasto'), f.city),
+      ...row('Instagram / www', f.social),
+      '',
+      f.message.trim(),
+    ];
+    // WhatsApp otwieramy od razu w kliknięciu, żeby przeglądarka nie zablokowała okna.
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener');
+    // Kopia zapasowa zgłoszenia w Netlify Forms (w tle, bez blokowania).
+    void submitForm('partner', { ...f, type: TYPES.find(t => t.id === f.type)?.label.nl || f.type, language: lang });
+    setState('sent');
   };
 
   if (state === 'sent') {
     return (
       <div className="border border-emerald-500/40 bg-emerald-500/5 p-6 text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400" />
-        <p className="mt-3 font-bebas text-3xl tracking-wide">{tr('Bedankt voor je aanmelding!', 'Thanks for reaching out!', 'Dziękujemy za zgłoszenie!')}</p>
+        <p className="mt-3 font-bebas text-3xl tracking-wide">{tr('Bijna klaar!', 'Almost done!', 'Prawie gotowe!')}</p>
         <p className="mt-2 text-sm text-neutral-300">
-          {tr('We bekijken je aanvraag en nemen zo snel mogelijk contact met je op.', 'We will review your request and get back to you as soon as possible.', 'Przejrzymy zgłoszenie i odezwiemy się najszybciej, jak to możliwe.')}
+          {tr(
+            'WhatsApp is geopend met je aanmelding. Druk daar op "Verzenden" – daarna nemen we zo snel mogelijk contact met je op.',
+            'WhatsApp has opened with your application. Tap "Send" there – we will get back to you as soon as possible.',
+            'Otworzył się WhatsApp z Twoim zgłoszeniem. Kliknij tam „Wyślij” – odezwiemy się najszybciej, jak to możliwe.'
+          )}
         </p>
+        <button type="button" onClick={() => setState('idle')} className="mt-4 text-xs font-mono uppercase tracking-wider text-neutral-400 underline hover:text-white">
+          {tr('WhatsApp niet geopend? Probeer opnieuw', 'WhatsApp did not open? Try again', 'WhatsApp się nie otworzył? Spróbuj ponownie')}
+        </button>
       </div>
     );
   }
@@ -93,7 +117,7 @@ export const PartnerForm: React.FC<{ lang: L }> = ({ lang }) => {
         className="flex w-full items-center justify-center gap-2 bg-[#D71920] py-4 font-condensed text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-[#b01318] disabled:opacity-60"
       >
         <Send className="h-4 w-4" />
-        {state === 'sending' ? tr('Versturen…', 'Sending…', 'Wysyłanie…') : tr('Aanmelding versturen', 'Send application', 'Wyślij zgłoszenie')}
+        {tr('Versturen via WhatsApp', 'Send via WhatsApp', 'Wyślij przez WhatsApp')}
       </button>
     </form>
   );
