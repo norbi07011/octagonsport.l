@@ -364,11 +364,22 @@ export const PartnersPage: React.FC = () => {
           )}
         </div>
         {INFLUENCERS.length > 0 ? (
-          <div className={`grid grid-cols-1 gap-5 ${INFLUENCERS.length > 1 ? 'md:grid-cols-2' : ''} ${INFLUENCERS.length === 3 || INFLUENCERS.length > 4 ? 'xl:grid-cols-3' : ''}`}>
+          <div className={`grid grid-cols-1 gap-5 ${INFLUENCERS.length > 1 ? 'md:grid-cols-2' : ''} ${INFLUENCERS.length === 3 || INFLUENCERS.length > 4 ? 'xl:grid-cols-6' : ''}`}>
             {INFLUENCERS.map((p, i) => (
               <div
                 key={p.id}
-                className={`grid ${i === INFLUENCERS.length - 1 && INFLUENCERS.length > 4 && INFLUENCERS.length % 3 === 1 ? 'xl:col-start-2' : ''}`}
+                className={`grid ${
+                  INFLUENCERS.length === 3 || INFLUENCERS.length > 4
+                    ? // 3 kolumny (siatka 6 × span 2); niepełny ostatni rząd wyśrodkowany
+                      `xl:col-span-2 ${
+                        INFLUENCERS.length % 3 === 1 && i === INFLUENCERS.length - 1
+                          ? 'xl:col-start-3'
+                          : INFLUENCERS.length % 3 === 2 && i === INFLUENCERS.length - 2
+                          ? 'xl:col-start-2'
+                          : ''
+                      }`
+                    : ''
+                }`}
               >
                 <PartnerCard p={p} lang={lang} stacked={INFLUENCERS.length > 1} />
               </div>
