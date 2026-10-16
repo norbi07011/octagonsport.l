@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TrainingVideos } from '../components/media/TrainingVideos';
-import { GloveShowcase } from '../components/showcase/GloveShowcase';
+import { ProductShowcase } from '../components/showcase/ProductShowcase';
+import { SHOWCASES } from '../data/showcases';
 import { BrandMark } from '../components/layout/BrandMark';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -230,7 +231,7 @@ export const HomePage: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 02.2 — PREMIUM SHOWCASE (karuzela 3D + scroll story rękawic Kevlar) */}
       {/* ========================================================================= */}
-      <GloveShowcase />
+      <ProductShowcase config={SHOWCASES.gloves} />
 
       {/* ========================================================================= */}
       {/* SECTION 02.5 — OCTAGON IN ACTIE (wideo z treningów) */}
@@ -271,6 +272,11 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* SHOWCASE — kaski Guardox 2-in-1 (karuzela 3D + scroll story) */}
+      {/* ========================================================================= */}
+      <ProductShowcase config={SHOWCASES.helmets} />
 
       {/* ========================================================================= */}
       {/* SECTION 04 — CINEMATIC ARENA PROMOTION BANNER */}
@@ -341,6 +347,11 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* SHOWCASE — ochraniacze Kevlar (karuzela 3D + scroll story) */}
+      {/* ========================================================================= */}
+      <ProductShowcase config={SHOWCASES.shinGuards} />
 
       {/* ========================================================================= */}
       {/* SECTION 06 — INTERACTIVE FIGHT SYSTEM EQUIPMENT SELECTOR */}
@@ -493,6 +504,11 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* SHOWCASE — owijki Supreme (karuzela 3D + scroll story) */}
+      {/* ========================================================================= */}
+      <ProductShowcase config={SHOWCASES.wraps} />
 
       {/* ========================================================================= */}
       {/* SECTION 08 — MEN / WOMEN EDITORIAL BLOCKS */}
