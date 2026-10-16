@@ -155,7 +155,6 @@ const helmets: ShowcaseConfig = {
     { key: 'black', id: 'oct-6070', accent: ACC.black, swatch: SW.black, label: Z, hero: '/showcase/guardox-black-hero.webp', detail: '/showcase/guardox-black-detail.webp' },
     { key: 'blue', id: 'oct-6075', accent: ACC.blue, label: BL, hero: '/showcase/guardox-blue-hero.webp', detail: '/showcase/guardox-blue-detail.webp' },
     { key: 'red', id: 'oct-6074', accent: ACC.red, label: R, hero: '/showcase/guardox-red-hero.webp', detail: '/showcase/guardox-red-detail.webp' },
-    { key: 'white', id: 'oct-6073', accent: ACC.white, swatch: SW.white, label: W, hero: '/showcase/guardox-white-hero.webp', detail: '/showcase/guardox-white-detail.webp' },
   ],
   features: [
     {
