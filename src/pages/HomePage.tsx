@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TrainingVideos } from '../components/media/TrainingVideos';
+import { GloveShowcase } from '../components/showcase/GloveShowcase';
 import { BrandMark } from '../components/layout/BrandMark';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -225,6 +226,11 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* SECTION 02.2 — PREMIUM SHOWCASE (karuzela 3D + scroll story rękawic Kevlar) */}
+      {/* ========================================================================= */}
+      <GloveShowcase />
 
       {/* ========================================================================= */}
       {/* SECTION 02.5 — OCTAGON IN ACTIE (wideo z treningów) */}
