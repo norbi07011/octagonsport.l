@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TrainingVideos } from '../components/media/TrainingVideos';
 import { ProductShowcase } from '../components/showcase/ProductShowcase';
 import { SHOWCASES } from '../data/showcases';
 import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
+import { KineticText } from '../components/fx/Kinetic';
+import { clamp, isFinePointer, prefersReducedMotion } from '../lib/motion';
 import { BrandMark } from '../components/layout/BrandMark';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -31,6 +33,33 @@ import { ArrowRight, Flame, Shield, Check, Award, ChevronRight, Zap, ShieldCheck
 export const HomePage: React.FC = () => {
   const { navigate, addToCart, showToast, language, t } = useStore();
   const [selectedSport, setSelectedSport] = useState<SportDiscipline>('mma');
+
+  // Hero z głębią: zdjęcie i treść przesuwają się w różnym tempie (mysz + przewijanie)
+  const heroRef = useRef<HTMLElement>(null);
+  const heroImg = useRef<HTMLImageElement>(null);
+  const heroContent = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    let raf = 0, mx = 0, my = 0, cx = 0, cy = 0, running = true;
+    const fine = isFinePointer();
+    const onMove = (e: PointerEvent) => { mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5; };
+    if (fine) window.addEventListener('pointermove', onMove, { passive: true });
+    const loop = () => {
+      const h = heroRef.current?.offsetHeight || 1;
+      const p = clamp(window.scrollY / h);
+      cx += (mx - cx) * 0.06; cy += (my - cy) * 0.06;
+      if (p < 1) {
+        if (heroImg.current) heroImg.current.style.transform = `translate3d(${-cx * 30}px, ${-cy * 20 + p * h * 0.35}px, 0) scale(${1.1 + p * 0.15})`;
+        if (heroContent.current) {
+          heroContent.current.style.transform = `translate3d(${cx * 18}px, ${cy * 12 - p * 120}px, 0)`;
+          heroContent.current.style.opacity = String(1 - p * 1.4);
+        }
+      }
+      if (running) raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => { running = false; cancelAnimationFrame(raf); window.removeEventListener('pointermove', onMove); };
+  }, []);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
@@ -69,13 +98,15 @@ export const HomePage: React.FC = () => {
       {/* ========================================================================= */}
       {/* SECTION 01 — HERO BANNER */}
       {/* ========================================================================= */}
-      <section className="relative min-h-[85vh] lg:min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-neutral-800">
+      <section ref={heroRef} className="relative min-h-[85vh] lg:min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-neutral-800">
         {/* Cinematic Backdrop Image with Deep Vignette */}
         <div className="absolute inset-0 z-0">
           <img
+            ref={heroImg}
             src={HOME_HERO_IMAGE}
             alt="Marris Gym × Legion Octagon Academy"
             className="w-full h-full object-cover object-center filter brightness-75"
+            style={{ transform: 'scale(1.1)', willChange: 'transform' }}
           />
           {/* Gradients – lżejsze, żeby sala była dobrze widoczna */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/35 to-black/45" />
@@ -83,8 +114,8 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center flex flex-col items-center">
-          <BrandMark className="w-16 h-16 sm:w-20 sm:h-20 mb-6 drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]" alt="Octagon" />
+        <div ref={heroContent} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center flex flex-col items-center" style={{ willChange: 'transform, opacity' }}>
+          <BrandMark className="oct-pop w-16 h-16 sm:w-20 sm:h-20 mb-6 drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]" alt="Octagon" />
 
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/60 border border-neutral-700/80 backdrop-blur-md mb-6">
@@ -96,19 +127,19 @@ export const HomePage: React.FC = () => {
 
           {/* Huge Editorial Headline */}
           <h1 className="font-bebas text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight text-white uppercase max-w-5xl leading-[0.9] text-balance drop-shadow-[0_4px_30px_rgba(0,0,0,0.85)]">
-            {t('hero.title')}
+            <KineticText text={t('hero.title')} stagger={30} delay={200} />
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-sm sm:text-base md:text-lg text-neutral-300 max-w-2xl font-body font-normal leading-relaxed text-balance">
+          <p className="oct-rise mt-6 text-sm sm:text-base md:text-lg text-neutral-300 max-w-2xl font-body font-normal leading-relaxed text-balance" style={{ animationDelay: '700ms' }}>
             {t('hero.subtitle')}
           </p>
 
           {/* Dual Primary CTAs */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <div className="oct-rise mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto" style={{ animationDelay: '900ms' }}>
             <button
               onClick={() => navigate('/category/fight-gear')}
-              className="w-full sm:w-auto px-8 py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-sm tracking-widest uppercase transition-all duration-200 shadow-xl shadow-red-950/30 flex items-center justify-center gap-2 group cursor-pointer"
+              className="oct-shine relative overflow-hidden w-full sm:w-auto px-8 py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-sm tracking-widest uppercase transition-all duration-200 shadow-xl shadow-red-950/30 hover:shadow-[0_10px_40px_-8px_rgba(215,25,32,.8)] active:scale-[0.97] flex items-center justify-center gap-2 group cursor-pointer"
             >
               <span>{t('hero.cta.fightGear')}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

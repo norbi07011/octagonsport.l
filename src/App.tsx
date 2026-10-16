@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initSmoothScroll } from './lib/smoothScroll';
+import { IntroOverlay, shouldShowIntro } from './components/fx/IntroOverlay';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { Header } from './components/layout/Header';
@@ -40,6 +41,8 @@ const AppContent: React.FC = () => {
 
   // Płynne przewijanie z bezwładnością (tylko komputer)
   useEffect(() => initSmoothScroll(), []);
+  // Intro z logo z cząsteczek – tylko przy pierwszym wejściu na stronę główną w tej sesji
+  const [intro, setIntro] = useState(() => (currentPath.split('?')[0] === '/' || currentPath === '') && shouldShowIntro());
 
   // Router view selector based on path
   const renderCurrentView = () => {
@@ -136,6 +139,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#FFFFFF] flex flex-col font-body selection:bg-[#D71920] selection:text-white">
+      {intro && <IntroOverlay onDone={() => setIntro(false)} />}
       {/* 1. Rotating Announcement Bar */}
       <AnnouncementBar />
 
