@@ -1,4 +1,5 @@
-import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
+import { CategorySpotlight } from '../components/showcase/CategorySpotlight';
+import { spotlightForCategory } from '../data/spotlights';
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, getLocalizedProduct, productInCategory, getSubcategoriesFor } from '../data/products';
@@ -177,8 +178,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
         </div>
       </div>
 
-      {/* Legion Kids – interaktywny wybór koszulki (tylko kategoria kids, bez filtra podkategorii) */}
-      {inferredCategory === 'kids' && !subParam && <KidsFighterSelect />}
+      {/* Interaktywna karta kolekcji dla każdej kategorii (bez filtra podkategorii) */}
+      {!subParam && (() => {
+        const spot = spotlightForCategory(inferredCategory, isNewPage);
+        return spot ? <CategorySpotlight key={spot.id} config={spot} /> : null;
+      })()}
 
       {/* Main Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
