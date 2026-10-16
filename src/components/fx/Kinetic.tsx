@@ -9,11 +9,25 @@ export const KineticText: React.FC<{
   stagger?: number;
 }> = ({ text, className = '', style, delay = 0, stagger = 32 }) => (
   <span className={`oct-kinetic ${className}`} style={style} aria-label={text} role="text">
-    {Array.from(text).map((ch, i) => (
-      <span key={i} aria-hidden className="oct-char" style={{ animationDelay: `${delay + i * stagger}ms` }}>
-        {ch === ' ' ? ' ' : ch}
-      </span>
-    ))}
+    {(() => {
+      // słowa zostają w całości (łamanie linii tylko między słowami), litery animowane osobno
+      let n = 0;
+      return text.split(' ').map((word, wi, arr) => (
+        <React.Fragment key={wi}>
+          <span aria-hidden className="inline-block whitespace-nowrap">
+            {Array.from(word).map(ch => {
+              const i = n++;
+              return (
+                <span key={i} className="oct-char" style={{ animationDelay: `${delay + i * stagger}ms` }}>
+                  {ch}
+                </span>
+              );
+            })}
+          </span>
+          {wi < arr.length - 1 ? ((n++), ' ') : null}
+        </React.Fragment>
+      ));
+    })()}
   </span>
 );
 

@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { PartnerForm } from '../components/forms/PartnerForm';
+import { Reveal, TiltCard, VelocityMarquee, ScrollProgress, useInView } from '../components/fx/ScrollFx';
+import { KineticText } from '../components/fx/Kinetic';
+import { ShaderStage, type ShaderStageHandle } from '../components/fx/ShaderStage';
+import { clamp, easeInOut, easeOut, lerp, prefersReducedMotion, useViewportWidth } from '../lib/motion';
 import { useStore } from '../context/StoreContext';
 import { ArrowRight, ArrowUpRight, Globe, Maximize2, Users, X } from 'lucide-react';
 import { PARTNERS, INFLUENCERS, PARTNERS_HERO_IMAGE, Partner, PartnerLink } from '../data/partners';
@@ -214,7 +219,7 @@ const ImageFrame: React.FC<{ p: Partner }> = ({ p }) => {
         </span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -239,7 +244,8 @@ const ImageFrame: React.FC<{ p: Partner }> = ({ p }) => {
             />
             <figcaption className="font-bebas text-2xl tracking-wide text-white">{p.name}</figcaption>
           </figure>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -296,10 +302,157 @@ const PartnerCard: React.FC<{ p: Partner; lang: Language; stacked?: boolean }> =
   );
 };
 
+/** Nagłówek sekcji – litery wjeżdżają, gdy sekcja pojawi się na ekranie */
+const RevealTitle: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
+  const [ref, inView] = useInView<HTMLHeadingElement>();
+  return (
+    <h2 ref={ref} className={className}>
+      {inView ? <KineticText text={text} stagger={26} /> : <span className="opacity-0">{text}</span>}
+    </h2>
+  );
+};
+
+/**
+ * Główny partner przypięty do ekranu (komputer): logo w pierścieniu w barwach NL obraca się
+ * i odsuwa w bok na żywym tle WebGL, opis wyłania się z rozmycia – wszystko sterowane scrollem.
+ */
+const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string }> = ({ p, lang, followLabel }) => {
+  const wrap = useRef<HTMLDivElement>(null);
+  const logo = useRef<HTMLDivElement>(null);
+  const ring = useRef<HTMLDivElement>(null);
+  const text = useRef<HTMLDivElement>(null);
+  const big = useRef<HTMLDivElement>(null);
+  const stage = useRef<ShaderStageHandle>(null);
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    let raf = 0;
+    let running = false;
+    let pS = -1;
+    let last = 0;
+    const frame = (now: number) => {
+      const dt = last ? Math.min((now - last) / 1000, 0.1) : 1 / 60;
+      last = now;
+      const k = 1 - Math.pow(1 - 0.12, dt * 60);
+      const rect = el.getBoundingClientRect();
+      const total = Math.max(el.offsetHeight - window.innerHeight, 1);
+      const pT = clamp(-rect.top / total);
+      pS = pS < 0 ? pT : pS + (pT - pS) * k;
+      const pp = pS;
+      const t = easeInOut(clamp(pp / 0.45));
+      const x = lerp(0, -22, t);
+      const sc = lerp(1.3, 0.92, t);
+      if (logo.current) logo.current.style.transform = `translate3d(${x}vw, 0, 0) scale(${sc})`;
+      if (ring.current) ring.current.style.transform = `rotate(${pp * 280}deg)`;
+      const o = easeOut(clamp((pp - 0.28) / 0.25));
+      if (text.current) {
+        text.current.style.opacity = String(o);
+        text.current.style.transform = `translate3d(${(1 - o) * 80}px, -50%, 0)`;
+        text.current.style.filter = o > 0.98 ? 'none' : `blur(${(1 - o) * 12}px)`;
+        text.current.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
+      }
+      if (big.current) big.current.style.transform = `translate3d(${lerp(12, -55, pp)}%, -50%, 0)`;
+      stage.current?.set({ focusX: 0.5 + x / 100, focusY: 0.5, intensity: 0.55 + 0.5 * pp });
+      if (running) raf = requestAnimationFrame(frame);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !running) { running = true; last = 0; raf = requestAnimationFrame(frame); }
+      if (!e.isIntersecting) { running = false; cancelAnimationFrame(raf); }
+    }, { rootMargin: '20% 0px' });
+    io.observe(el);
+    return () => { running = false; cancelAnimationFrame(raf); io.disconnect(); };
+  }, []);
+
+  return (
+    <div ref={wrap} className="relative h-[260vh] border-b border-neutral-900">
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 55% 55% at 40% 50%, rgba(215,25,32,.25), transparent 70%)' }} />
+        <div aria-hidden className="absolute inset-0">
+          <ShaderStage ref={stage} color="#D71920" mode="story" />
+        </div>
+        <div
+          ref={big}
+          aria-hidden
+          className="oct-outline-text pointer-events-none absolute left-0 top-1/2 whitespace-nowrap font-bebas leading-none"
+          style={{ fontSize: 'clamp(160px, 26vw, 400px)', transform: 'translate3d(12%, -50%, 0)', willChange: 'transform' }}
+        >
+          {p.name.toUpperCase()} · {p.name.toUpperCase()}
+        </div>
+
+        {/* Logo w obracającym się pierścieniu NL */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div ref={logo} className="relative" style={{ width: 'min(46vh, 420px)', height: 'min(46vh, 420px)', willChange: 'transform' }}>
+            <div aria-hidden className="absolute -inset-8 rounded-full opacity-80 blur-3xl" style={{ background: 'radial-gradient(circle at 30% 30%, rgba(215,25,32,.55), transparent 60%), radial-gradient(circle at 70% 75%, rgba(33,70,139,.6), transparent 60%)' }} />
+            <div ref={ring} className="absolute inset-0 rounded-full" style={{ background: 'conic-gradient(from 200deg, #AE1C28, #f4f4f4, #21468B, #AE1C28)', willChange: 'transform' }} />
+            <div className="absolute inset-[4px] rounded-full bg-[#050505] p-2">
+              <img src={p.logo} alt={`Logo ${p.name}`} className="h-full w-full rounded-full object-cover" />
+            </div>
+          </div>
+        </div>
+
+        {/* Opis */}
+        <div
+          ref={text}
+          className="absolute right-[5vw] top-1/2 w-[min(540px,44vw)] space-y-5"
+          style={{ opacity: 0, transform: 'translate3d(80px,-50%,0)', willChange: 'transform, opacity, filter' }}
+        >
+          <span className="inline-flex items-center gap-2 bg-[#D71920] px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">{p.role[lang]}</span>
+          <h2 className="font-bebas text-6xl leading-[0.9] tracking-wide text-white xl:text-7xl">{p.name}</h2>
+          <p className="text-sm leading-relaxed text-neutral-300 xl:text-base">{p.description[lang]}</p>
+          {p.tags && p.tags.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {p.tags.map((tg, i) => (
+                <li key={i} className="border border-white/15 bg-black/30 px-3 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-wider text-neutral-200 backdrop-blur-sm">{tg[lang]}</li>
+              ))}
+            </ul>
+          )}
+          <div className="space-y-3 pt-1">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-400">{followLabel}</p>
+            <PartnerLinks links={p.links} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** Hero z parallaxą: zdjęcie przybliża się i przesuwa, tekst odpływa przy przewijaniu */
+const useHeroParallax = () => {
+  const section = useRef<HTMLElement>(null);
+  const img = useRef<HTMLImageElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = section.current;
+      if (!el) return;
+      const h = el.offsetHeight;
+      const pp = clamp(window.scrollY / Math.max(h, 1));
+      if (pp >= 1) return;
+      if (img.current) img.current.style.transform = `translate3d(0, ${pp * 18}%, 0) scale(${1.06 + pp * 0.22})`;
+      if (content.current) {
+        content.current.style.transform = `translate3d(0, ${-pp * 140}px, 0)`;
+        content.current.style.opacity = String(1 - pp * 1.25);
+      }
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener('scroll', on, { passive: true });
+    update();
+    return () => { window.removeEventListener('scroll', on); cancelAnimationFrame(raf); };
+  }, []);
+  return { section, img, content };
+};
+
 export const PartnersPage: React.FC = () => {
   const { language, navigate } = useStore();
   const lang = language as Language;
   const c = (k: string) => COPY[k][lang];
+  const vw = useViewportWidth();
+  const desktop = vw >= 1024;
+  const hero = useHeroParallax();
 
   React.useEffect(() => {
     document.title = `${c('eyebrow')} | OctagonSportNL`;
@@ -307,59 +460,80 @@ export const PartnersPage: React.FC = () => {
 
   const featured = PARTNERS.filter(p => p.featured);
   const others = PARTNERS.filter(p => !p.featured);
+  const allNames = [...PARTNERS, ...INFLUENCERS].map(p => p.name);
 
   return (
     <div className="bg-[#050505] text-white">
-      {/* HERO – zdjęcie grupowe z treningu */}
-      <section className="relative overflow-hidden border-b border-neutral-800">
+      <ScrollProgress />
+
+      {/* HERO – zdjęcie grupowe z treningu (parallax) */}
+      <section ref={hero.section} className="relative overflow-hidden border-b border-neutral-800">
         <img
+          ref={hero.img}
           src={PARTNERS_HERO_IMAGE}
           alt={c('caption')}
-          className="absolute inset-0 w-full h-full object-cover object-[center_35%]"
+          className="absolute inset-0 h-full w-full object-cover object-[center_35%]"
+          style={{ transform: 'scale(1.06)', willChange: 'transform' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/55 to-[#050505]/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-48 sm:pt-72 lg:pt-96 pb-12 sm:pb-16">
-          <p className="flex items-center gap-3 text-[11px] font-mono uppercase tracking-[0.25em] text-[#D71920] mb-4">
-            <span className="w-8 h-px bg-[#D71920]" />
+        <div ref={hero.content} className="relative mx-auto max-w-7xl px-4 pt-48 pb-12 sm:px-6 sm:pt-72 sm:pb-16 lg:pt-96" style={{ willChange: 'transform, opacity' }}>
+          <p className="oct-rise mb-4 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-[#D71920]">
+            <span className="h-px w-8 bg-[#D71920]" />
             {c('eyebrow')}
           </p>
-          <h1 className="font-bebas text-6xl sm:text-8xl lg:text-9xl leading-[0.85] tracking-wide text-balance max-w-4xl">
-            {c('title')}
+          <h1 className="max-w-4xl font-bebas text-6xl leading-[0.85] tracking-wide sm:text-8xl lg:text-9xl">
+            <KineticText text={c('title')} stagger={40} delay={150} />
           </h1>
-          <div className="mt-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-            <p className="text-sm sm:text-base text-neutral-200 max-w-xl leading-relaxed">{c('lead')}</p>
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">{c('caption')}</p>
+          <div className="oct-rise mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between" style={{ animationDelay: '700ms' }}>
+            <p className="max-w-xl text-sm leading-relaxed text-neutral-200 sm:text-base">{c('lead')}</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">{c('caption')}</p>
           </div>
         </div>
       </section>
 
-      {/* HOOFDPARTNER */}
-      {featured.map(p => (
-        <section key={p.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-b border-neutral-900">
-          <FeaturedPartner p={p} lang={lang} followLabel={c('follow')} />
-        </section>
-      ))}
+      {/* HOOFDPARTNER – przypięty na komputerze, zwykły wjazd na telefonie */}
+      {featured.map(p =>
+        desktop && !prefersReducedMotion() ? (
+          <FeaturedPinned key={p.id} p={p} lang={lang} followLabel={c('follow')} />
+        ) : (
+          <section key={p.id} className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-24">
+            <Reveal>
+              <FeaturedPartner p={p} lang={lang} followLabel={c('follow')} />
+            </Reveal>
+          </section>
+        )
+      )}
+
+      {/* Paski z nazwami – reagują na tempo przewijania */}
+      <section aria-hidden className="relative overflow-hidden border-b border-neutral-900 py-8 sm:py-12">
+        <VelocityMarquee items={allNames} className="text-6xl text-white sm:text-8xl" />
+        <VelocityMarquee items={[...allNames].reverse()} direction={-1} outline className="mt-2 text-6xl sm:text-8xl" />
+      </section>
 
       {/* POZOSTALI PARTNERZY BIZNESOWI */}
       {others.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 border-b border-neutral-900">
-          <h2 className="font-bebas text-4xl sm:text-5xl tracking-wide mb-8">{c('partnersTitle')}</h2>
+        <section className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-20">
+          <RevealTitle text={c('partnersTitle')} className="mb-8 font-bebas text-4xl tracking-wide sm:text-6xl" />
           <div className={`grid grid-cols-1 gap-5 ${others.length > 1 ? 'md:grid-cols-2' : ''} ${others.length === 3 || others.length > 4 ? 'xl:grid-cols-3' : ''}`}>
-            {others.map(p => (
-              <PartnerCard key={p.id} p={p} lang={lang} stacked={others.length > 1} />
+            {others.map((p, i) => (
+              <Reveal key={p.id} delay={(i % 3) * 120} className="grid">
+                <TiltCard glow={accentOf(p).replace(/[\d.]+\)$/, '0.35)')} className="grid">
+                  <PartnerCard p={p} lang={lang} stacked={others.length > 1} />
+                </TiltCard>
+              </Reveal>
             ))}
           </div>
         </section>
       )}
 
       {/* INFLUENCERZY / ZAWODNICY */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 border-b border-neutral-900">
-        <div className="flex items-end justify-between gap-4 mb-8">
-          <h2 className="font-bebas text-4xl sm:text-5xl tracking-wide">{c('influencersTitle')}</h2>
+      <section className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <RevealTitle text={c('influencersTitle')} className="font-bebas text-4xl tracking-wide sm:text-6xl" />
           {INFLUENCERS.length === 0 && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 border border-neutral-800 px-2.5 py-1">
+            <span className="border border-neutral-800 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
               {c('soon')}
             </span>
           )}
@@ -367,8 +541,9 @@ export const PartnersPage: React.FC = () => {
         {INFLUENCERS.length > 0 ? (
           <div className={`grid grid-cols-1 gap-5 ${INFLUENCERS.length > 1 ? 'md:grid-cols-2' : ''} ${INFLUENCERS.length === 3 || INFLUENCERS.length > 4 ? 'xl:grid-cols-6' : ''}`}>
             {INFLUENCERS.map((p, i) => (
-              <div
+              <Reveal
                 key={p.id}
+                delay={(i % 3) * 120}
                 className={`grid ${
                   INFLUENCERS.length === 3 || INFLUENCERS.length > 4
                     ? // 3 kolumny (siatka 6 × span 2); niepełny ostatni rząd wyśrodkowany
@@ -382,44 +557,50 @@ export const PartnersPage: React.FC = () => {
                     : ''
                 }`}
               >
-                <PartnerCard p={p} lang={lang} stacked={INFLUENCERS.length > 1} />
-              </div>
+                <TiltCard glow={accentOf(p).replace(/[\d.]+\)$/, '0.35)')} className="grid">
+                  <PartnerCard p={p} lang={lang} stacked={INFLUENCERS.length > 1} />
+                </TiltCard>
+              </Reveal>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5 p-6 sm:p-8 border border-dashed border-neutral-800">
-            <span className="w-12 h-12 shrink-0 rounded-full bg-[#141414] flex items-center justify-center">
-              <Users className="w-5 h-5 text-[#D71920]" />
+          <div className="flex flex-col gap-5 border border-dashed border-neutral-800 p-6 sm:flex-row sm:items-center sm:p-8">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#141414]">
+              <Users className="h-5 w-5 text-[#D71920]" />
             </span>
-            <p className="text-sm text-neutral-400 leading-relaxed max-w-[70ch]">{c('influencersEmpty')}</p>
+            <p className="max-w-[70ch] text-sm leading-relaxed text-neutral-400">{c('influencersEmpty')}</p>
           </div>
         )}
       </section>
 
       {/* CTA + formularz współpracy */}
-      <section id="samenwerken" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 items-start">
+      <section id="samenwerken" className="mx-auto max-w-7xl border-t border-neutral-900 px-4 py-16 sm:px-6 sm:py-24">
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="min-w-0 lg:sticky lg:top-28">
-            <h2 className="font-bebas text-5xl sm:text-6xl tracking-wide leading-none">{c('ctaTitle')}</h2>
-            <p className="mt-4 text-sm sm:text-base text-neutral-400 max-w-xl leading-relaxed">{c('ctaText')}</p>
-            <ul className="mt-6 space-y-2 text-sm text-neutral-300">
-              {(lang === 'pl'
-                ? ['Sprzęt i odzież Octagon dla klubów i drużyn', 'Współpraca z zawodnikami, trenerami i twórcami', 'Wspólne akcje, gale i wydarzenia']
-                : lang === 'en'
-                ? ['Octagon gear and apparel for clubs and teams', 'Collaborations with fighters, coaches and creators', 'Joint campaigns, fight nights and events']
-                : ['Octagon-gear en kleding voor clubs en teams', 'Samenwerkingen met vechters, trainers en creators', 'Samen acties, gala’s en evenementen']
-              ).map(item => (
-                <li key={item} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#D71920]" aria-hidden="true" />{item}</li>
-              ))}
-            </ul>
-            <button
-              onClick={() => navigate('/clubs')}
-              className="mt-6 inline-flex items-center gap-2 text-xs font-condensed font-bold uppercase tracking-widest text-neutral-300 hover:text-white"
-            >
-              {c('ctaClubs')} <ArrowRight className="w-4 h-4" />
-            </button>
+            <RevealTitle text={c('ctaTitle')} className="font-bebas text-5xl leading-none tracking-wide sm:text-7xl" />
+            <Reveal delay={150}>
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-neutral-400 sm:text-base">{c('ctaText')}</p>
+              <ul className="mt-6 space-y-2 text-sm text-neutral-300">
+                {(lang === 'pl'
+                  ? ['Sprzęt i odzież Octagon dla klubów i drużyn', 'Współpraca z zawodnikami, trenerami i twórcami', 'Wspólne akcje, gale i wydarzenia']
+                  : lang === 'en'
+                  ? ['Octagon gear and apparel for clubs and teams', 'Collaborations with fighters, coaches and creators', 'Joint campaigns, fight nights and events']
+                  : ['Octagon-gear en kleding voor clubs en teams', 'Samenwerkingen met vechters, trainers en creators', 'Samen acties, gala’s en evenementen']
+                ).map(item => (
+                  <li key={item} className="flex gap-3"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#D71920]" aria-hidden="true" />{item}</li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate('/clubs')}
+                className="mt-6 inline-flex items-center gap-2 font-condensed text-xs font-bold uppercase tracking-widest text-neutral-300 hover:text-white"
+              >
+                {c('ctaClubs')} <ArrowRight className="h-4 w-4" />
+              </button>
+            </Reveal>
           </div>
-          <PartnerForm lang={lang} />
+          <Reveal delay={250}>
+            <PartnerForm lang={lang} />
+          </Reveal>
         </div>
       </section>
     </div>
