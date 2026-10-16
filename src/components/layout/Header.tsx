@@ -223,6 +223,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
           >
             <button
               onClick={() => setIsCartOpen(true)}
+              data-cart-target
               aria-label="Winkelwagen openen"
               className="p-2 bg-[#141414] hover:bg-[#D71920] border border-neutral-800 hover:border-[#D71920] text-white rounded transition-colors flex items-center gap-2 cursor-pointer group"
             >

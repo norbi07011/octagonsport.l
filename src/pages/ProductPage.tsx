@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { ProductGallery } from '../components/commerce/ProductGallery';
+import { flyToCart } from '../lib/flyToCart';
+import { Reveal } from '../components/fx/ScrollFx';
 import { openWhatsApp, WhatsAppIcon } from '../components/layout/WhatsAppWidget';
 import { quoteForProduct, formatEur, FREE_SHIPPING_THRESHOLD, TIERS } from '../config/shipping';
 import { useStore } from '../context/StoreContext';
@@ -47,7 +50,6 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
   const variants = getVariants(rawProduct);
   const onlyOneSize = product.sizes.length === 1;
 
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'Standard');
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]?.name || 'Standard');
   const [quantity, setQuantity] = useState(1);
@@ -57,7 +59,6 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
       document.title = `${product.name} | OctagonSportNL`;
       setSelectedSize(rawProduct.sizes[0] || 'Standard');
       setSelectedColor(rawProduct.colors[0]?.name || 'Standard');
-      setSelectedImageIdx(0);
       setQuantity(1);
     }
   }, [rawProduct.id]);
@@ -78,7 +79,9 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
   const inWishlist = isInWishlist(product.id);
 
 
+  const galleryRef = useRef<HTMLDivElement>(null);
   const handleAddToCart = () => {
+    flyToCart(galleryRef.current);
     addToCart(rawProduct, selectedSize, selectedColor, quantity);
   };
 
@@ -136,62 +139,46 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
           {/* ============================================================= */}
           {/* LEFT: ~60% GALLERY (lg:col-span-7) */}
           {/* ============================================================= */}
-          <div className="lg:col-span-7 space-y-4">
-            {/* Main Stage Image */}
-            <div className="relative aspect-[4/5] bg-white border border-neutral-800 overflow-hidden flex items-center justify-center">
-              <img
-                src={product.images[selectedImageIdx] || product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-contain"
-              />
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-                {product.badges.map((b, i) => (
-                  <span
-                    key={i}
-                    className={`text-xs font-condensed font-bold uppercase tracking-wider px-3 py-1 ${
-                      b.type === 'sale' ? 'bg-[#D71920] text-white' : 'bg-black/90 text-white border border-neutral-700'
-                    }`}
-                  >
-                    {b.label}
-                  </span>
-                ))}
-              </div>
-
-              {/* Wishlist Button */}
-              <button
-                onClick={() => toggleWishlist(product.id)}
-                aria-label={t('nav.wishlist')}
-                className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-colors cursor-pointer ${
-                  inWishlist ? 'bg-[#D71920] text-white' : 'bg-black/60 hover:bg-black text-white'
-                }`}
-              >
-                <Heart className={`w-5 h-5 ${inWishlist ? 'fill-white' : ''}`} />
-              </button>
-            </div>
-
-            {/* Thumbnail Row */}
-            {product.images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {product.images.map((img, idx) => (
+          <div ref={galleryRef} className="lg:col-span-7">
+            <ProductGallery
+              productId={product.id}
+              images={product.images}
+              name={product.name}
+              colorHex={product.colors[0]?.hex}
+              overlay={
+                <>
+                  {/* Badges */}
+                  <div className="pointer-events-none absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+                    {product.badges.map((b, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs font-condensed font-bold uppercase tracking-wider px-3 py-1 ${
+                          b.type === 'sale' ? 'bg-[#D71920] text-white' : 'bg-black/90 text-white border border-neutral-700'
+                        }`}
+                      >
+                        {b.label}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Wishlist Button */}
                   <button
-                    key={idx}
-                    onClick={() => setSelectedImageIdx(idx)}
-                    className={`w-20 h-24 shrink-0 bg-white border-2 overflow-hidden transition-all cursor-pointer ${
-                      selectedImageIdx === idx ? 'border-[#D71920] opacity-100' : 'border-neutral-800 opacity-60 hover:opacity-90'
+                    onClick={e => { e.stopPropagation(); toggleWishlist(product.id); }}
+                    aria-label={t('nav.wishlist')}
+                    className={`absolute top-4 right-4 z-10 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-90 cursor-pointer ${
+                      inWishlist ? 'bg-[#D71920] text-white' : 'bg-black/60 hover:bg-black text-white'
                     }`}
                   >
-                    <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-contain" />
+                    <Heart className={`w-5 h-5 ${inWishlist ? 'fill-white' : ''}`} />
                   </button>
-                ))}
-              </div>
-            )}
+                </>
+              }
+            />
           </div>
 
           {/* ============================================================= */}
           {/* RIGHT: ~40% STICKY PRODUCT INFO (lg:col-span-5) */}
           {/* ============================================================= */}
-          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+          <div key={product.id} className="oct-stagger lg:col-span-5 space-y-6 lg:sticky lg:top-24">
             {/* Header info */}
             <div>
               <div className="flex items-center justify-between text-xs text-neutral-400 font-mono uppercase mb-1">
@@ -287,7 +274,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
                   <button
                     key={s}
                     onClick={() => setSelectedSize(s)}
-                    className={`py-3 text-xs font-mono font-bold border transition-colors cursor-pointer ${
+                    className={`py-3 text-xs font-mono font-bold border transition-all duration-200 active:scale-95 hover:-translate-y-0.5 cursor-pointer ${
                       selectedSize === s
                         ? 'border-[#D71920] bg-[#D71920] text-white'
                         : 'border-neutral-800 bg-[#121212] text-neutral-300 hover:border-neutral-600'
@@ -327,7 +314,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-lg shadow-red-950/30"
+                  className="oct-shine relative overflow-hidden flex-1 py-4 bg-[#D71920] hover:bg-[#b01318] text-white font-condensed font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] cursor-pointer shadow-lg shadow-red-950/30 hover:shadow-[0_10px_40px_-8px_rgba(215,25,32,.8)]"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>{t('product.addToCart')}</span>
@@ -488,7 +475,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
         {/* CROSS SELL: COMPLETE YOUR FIGHT KIT */}
         {/* ============================================================= */}
         {crossSellProducts.length > 0 && (
-        <div className="mt-20 pt-12 border-t border-neutral-800">
+        <Reveal className="mt-20 pt-12 border-t border-neutral-800">
           <div className="flex items-center gap-2 mb-6">
             <Flame className="w-5 h-5 text-[#D71920]" />
             <h2 className="font-bebas text-2xl sm:text-3xl text-white tracking-wide">
@@ -500,7 +487,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
-        </div>
+        </Reveal>
         )}
       </div>
 
@@ -512,7 +499,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ slug }) => {
         </div>
         <button
           onClick={handleAddToCart}
-          className="px-6 py-2.5 bg-[#D71920] text-white font-condensed font-bold text-xs uppercase tracking-wider shrink-0 cursor-pointer"
+          className="oct-shine relative overflow-hidden px-6 py-2.5 bg-[#D71920] text-white font-condensed font-bold text-xs uppercase tracking-wider shrink-0 cursor-pointer active:scale-95 transition-transform"
         >
           {t('product.addToCart')}
         </button>

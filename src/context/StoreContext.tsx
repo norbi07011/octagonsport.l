@@ -374,7 +374,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? `${localizedTitle} (${chosenSize}) added to cart!`
         : `${localizedTitle} (${chosenSize}) toegevoegd aan winkelwagen!`
     );
-    setIsCartOpen(true);
+    // jeśli trwa animacja „lotu do koszyka”, panel koszyka wysuwa się dopiero po niej
+    const flying = typeof window !== 'undefined' && Date.now() - ((window as unknown as { __octFlyAt?: number }).__octFlyAt || 0) < 300;
+    if (flying) window.setTimeout(() => setIsCartOpen(true), 1050);
+    else setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string, size: string, color: string) => {

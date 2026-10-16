@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { TiltCard, useInView } from '../fx/ScrollFx';
+import { flyToCart } from '../../lib/flyToCart';
 import { BrandMark } from '../layout/BrandMark';
 import { Product } from '../../types';
 import { useStore } from '../../context/StoreContext';
@@ -28,7 +30,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const localizedItem = getLocalizedProduct(product, language);
   const inWishlist = isInWishlist(product.id);
 
-  const currentImage = (isHovered && product.images[1]) ? product.images[1] : product.images[0];
+  const secondImage = product.images[1] && !/tabel|size|chart/i.test(product.images[1]) ? product.images[1] : undefined;
+  const imageBox = useRef<HTMLDivElement>(null);
+  // wjazd „falą”: opóźnienie zależne od pozycji karty w rzędzie
+  const [revealRef, inView] = useInView<HTMLDivElement>('0px 0px -6% 0px');
+  useEffect(() => {
+    const el = revealRef.current;
+    const parent = el?.parentElement?.parentElement;
+    if (!el || !parent) return;
+    const i = Array.prototype.indexOf.call(parent.children, el.parentElement);
+    el.style.setProperty('--d', `${(Math.max(i, 0) % 4) * 90}ms`);
+  }, [revealRef]);
 
   const handleCardClick = (e: React.MouseEvent) => {
     // If not clicked on a button
@@ -37,13 +49,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const handleQuickAdd = (size: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    flyToCart(imageBox.current);
     addToCart(product, size);
     setShowQuickSizes(false);
   };
 
   return (
+    <TiltCard className="h-full" max={5}>
     <div 
-      className="group relative flex flex-col bg-[#0B0B0B] border border-neutral-800/80 hover:border-neutral-600 transition-all duration-300"
+      ref={revealRef}
+      className={`oct-reveal ${inView ? 'is-in' : ''} group relative flex h-full flex-col bg-[#0B0B0B] border border-neutral-800/80 hover:border-neutral-600 hover:shadow-[0_20px_60px_-20px_rgba(215,25,32,.45)] transition-[border-color,box-shadow] duration-500`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -52,17 +67,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       {/* 4:5 Image Container */}
       <div 
+        ref={imageBox}
         onClick={handleCardClick}
         className="relative w-full aspect-[4/5] bg-white overflow-hidden cursor-pointer flex items-center justify-center"
       >
         {!imageError ? (
-          <img
-            src={currentImage}
-            alt={localizedItem.name}
-            onError={() => setImageError(true)}
-            className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
+          <>
+            <img
+              src={product.images[0]}
+              alt={localizedItem.name}
+              onError={() => setImageError(true)}
+              className={`absolute inset-0 w-full h-full object-contain transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(.16,1,.3,1)] ${isHovered && secondImage ? 'opacity-0 scale-110 blur-[2px]' : 'opacity-100 group-hover:scale-105'}`}
+              loading="lazy"
+            />
+            {secondImage && (
+              <img
+                src={secondImage}
+                alt=""
+                aria-hidden
+                className={`absolute inset-0 w-full h-full object-contain transition-[transform,opacity] duration-700 ease-[cubic-bezier(.16,1,.3,1)] ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                loading="lazy"
+              />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-neutral-900 to-[#0B0B0B] text-center">
             <BrandMark className="w-12 h-12 opacity-40" alt="" />
@@ -176,6 +203,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             onClick={(e) => {
               e.stopPropagation();
               if (product.sizes.length === 1) {
+                flyToCart(imageBox.current);
                 addToCart(product, product.sizes[0]);
               } else {
                 setShowQuickSizes(true);
@@ -238,5 +266,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </div>
     </div>
+    </TiltCard>
   );
 };
