@@ -312,17 +312,38 @@ const RevealTitle: React.FC<{ text: string; className?: string }> = ({ text, cla
   );
 };
 
+/** rgba(...)/#hex → #rrggbb (kolor tła WebGL) */
+const toHex = (c: string) => {
+  const m = c.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (!m) return c.startsWith('#') ? c : '#D71920';
+  return '#' + [m[1], m[2], m[3]].map(v => Number(v).toString(16).padStart(2, '0')).join('');
+};
+
 /**
- * Główny partner przypięty do ekranu (komputer): logo w pierścieniu w barwach NL obraca się
- * i odsuwa w bok na żywym tle WebGL, opis wyłania się z rozmycia – wszystko sterowane scrollem.
+ * Partner przypięty do ekranu (komputer): logo w obracającym się, świecącym pierścieniu
+ * wyrasta na środku na żywym tle WebGL, potem odsuwa się w bok, a opis wyłania się z rozmycia.
+ * Kolor = kolor partnera; Marris Gym (hoofdpartner) ma pierścień w barwach NL.
  */
-const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string }> = ({ p, lang, followLabel }) => {
+const PartnerPinned: React.FC<{
+  p: Partner;
+  lang: Language;
+  followLabel: string;
+  side: 'left' | 'right';
+  heightVh: number;
+  index?: string;
+  nl?: boolean;
+}> = ({ p, lang, followLabel, side, heightVh, index, nl }) => {
   const wrap = useRef<HTMLDivElement>(null);
   const logo = useRef<HTMLDivElement>(null);
-  const ring = useRef<HTMLDivElement>(null);
+  const ring = useRef<HTMLSpanElement>(null);
   const text = useRef<HTMLDivElement>(null);
   const big = useRef<HTMLDivElement>(null);
   const stage = useRef<ShaderStageHandle>(null);
+  const accent = nl ? '#D71920' : toHex(accentOf(p));
+  const dir = side === 'left' ? -1 : 1; // w którą stronę odsuwa się logo
+  const round = p.logoShape === 'photo' || nl;
+  const wide = p.logoShape === 'wide';
+  const radius = round ? 'rounded-full' : 'rounded-[28px]';
 
   useEffect(() => {
     const el = wrap.current;
@@ -341,18 +362,19 @@ const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string
       pS = pS < 0 ? pT : pS + (pT - pS) * k;
       const pp = pS;
       const t = easeInOut(clamp(pp / 0.45));
-      const x = lerp(0, -22, t);
+      const x = lerp(0, 22 * dir, t);
       const sc = lerp(1.3, 0.92, t);
-      if (logo.current) logo.current.style.transform = `translate3d(${x}vw, 0, 0) scale(${sc})`;
-      if (ring.current) ring.current.style.transform = `rotate(${pp * 280}deg)`;
+      const ry = lerp(-28 * dir, 0, easeOut(clamp(pp / 0.35)));
+      if (logo.current) logo.current.style.transform = `translate3d(${x}vw, 0, 0) perspective(1000px) rotateY(${ry}deg) scale(${sc})`;
+      if (ring.current) ring.current.style.transform = `rotate(${pp * 300}deg)`;
       const o = easeOut(clamp((pp - 0.28) / 0.25));
       if (text.current) {
         text.current.style.opacity = String(o);
-        text.current.style.transform = `translate3d(${(1 - o) * 80}px, -50%, 0)`;
+        text.current.style.transform = `translate3d(${(1 - o) * -80 * dir}px, -50%, 0)`;
         text.current.style.filter = o > 0.98 ? 'none' : `blur(${(1 - o) * 12}px)`;
         text.current.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
       }
-      if (big.current) big.current.style.transform = `translate3d(${lerp(12, -55, pp)}%, -50%, 0)`;
+      if (big.current) big.current.style.transform = `translate3d(${dir < 0 ? lerp(12, -55, pp) : lerp(-55, 12, pp)}%, -50%, 0)`;
       stage.current?.set({ focusX: 0.5 + x / 100, focusY: 0.5, intensity: 0.55 + 0.5 * pp });
       if (running) raf = requestAnimationFrame(frame);
     };
@@ -362,14 +384,24 @@ const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string
     }, { rootMargin: '20% 0px' });
     io.observe(el);
     return () => { running = false; cancelAnimationFrame(raf); io.disconnect(); };
-  }, []);
+  }, [dir]);
+
+  const ringBg = nl
+    ? 'conic-gradient(from 200deg, #AE1C28, #f4f4f4, #21468B, #AE1C28)'
+    : `conic-gradient(from 0deg, ${accent}, rgba(255,255,255,.08) 25%, rgba(255,255,255,.75) 50%, rgba(255,255,255,.08) 75%, ${accent})`;
+  const glowBg = nl
+    ? 'radial-gradient(circle at 30% 30%, rgba(215,25,32,.55), transparent 60%), radial-gradient(circle at 70% 75%, rgba(33,70,139,.6), transparent 60%)'
+    : `radial-gradient(circle, ${accent}99, transparent 65%)`;
+  const box = wide
+    ? { width: 'min(64vh, 560px)', height: 'min(40vh, 350px)' }
+    : { width: 'min(46vh, 420px)', height: 'min(46vh, 420px)' };
 
   return (
-    <div ref={wrap} className="relative h-[260vh] border-b border-neutral-900">
+    <div ref={wrap} className="relative border-b border-neutral-900" style={{ height: `${heightVh}vh` }}>
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <div aria-hidden className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 55% 55% at 40% 50%, rgba(215,25,32,.25), transparent 70%)' }} />
+        <div aria-hidden className="absolute inset-0" style={{ background: `radial-gradient(ellipse 55% 55% at ${dir < 0 ? 40 : 60}% 50%, ${accent}40, transparent 70%)` }} />
         <div aria-hidden className="absolute inset-0">
-          <ShaderStage ref={stage} color="#D71920" mode="story" />
+          <ShaderStage ref={stage} color={accent} mode="story" />
         </div>
         <div
           ref={big}
@@ -380,13 +412,19 @@ const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string
           {p.name.toUpperCase()} · {p.name.toUpperCase()}
         </div>
 
-        {/* Logo w obracającym się pierścieniu NL */}
+        {/* Logo w obracającym się pierścieniu */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div ref={logo} className="relative" style={{ width: 'min(46vh, 420px)', height: 'min(46vh, 420px)', willChange: 'transform' }}>
-            <div aria-hidden className="absolute -inset-8 rounded-full opacity-80 blur-3xl" style={{ background: 'radial-gradient(circle at 30% 30%, rgba(215,25,32,.55), transparent 60%), radial-gradient(circle at 70% 75%, rgba(33,70,139,.6), transparent 60%)' }} />
-            <div ref={ring} className="absolute inset-0 rounded-full" style={{ background: 'conic-gradient(from 200deg, #AE1C28, #f4f4f4, #21468B, #AE1C28)', willChange: 'transform' }} />
-            <div className="absolute inset-[4px] rounded-full bg-[#050505] p-2">
-              <img src={p.logo} alt={`Logo ${p.name}`} className="h-full w-full rounded-full object-cover" />
+          <div ref={logo} className="relative" style={{ ...box, willChange: 'transform' }}>
+            <div aria-hidden className={`absolute -inset-10 ${radius} opacity-80 blur-3xl`} style={{ background: glowBg }} />
+            <span aria-hidden className={`absolute inset-0 overflow-hidden ${radius}`}>
+              <span ref={ring} className="absolute -inset-1/2" style={{ background: ringBg, willChange: 'transform' }} />
+            </span>
+            <div className={`absolute inset-[4px] overflow-hidden bg-[#050505] ${round ? 'rounded-full p-2' : 'rounded-[24px]'}`}>
+              <img
+                src={p.logo}
+                alt={`Logo ${p.name}`}
+                className={`h-full w-full ${round ? 'rounded-full object-cover' : wide ? 'object-contain p-6' : 'object-contain'}`}
+              />
             </div>
           </div>
         </div>
@@ -394,11 +432,16 @@ const FeaturedPinned: React.FC<{ p: Partner; lang: Language; followLabel: string
         {/* Opis */}
         <div
           ref={text}
-          className="absolute right-[5vw] top-1/2 w-[min(540px,44vw)] space-y-5"
-          style={{ opacity: 0, transform: 'translate3d(80px,-50%,0)', willChange: 'transform, opacity, filter' }}
+          className={`absolute top-1/2 w-[min(540px,44vw)] space-y-5 ${dir < 0 ? 'right-[5vw]' : 'left-[5vw]'}`}
+          style={{ opacity: 0, transform: `translate3d(${-80 * dir}px,-50%,0)`, willChange: 'transform, opacity, filter' }}
         >
-          <span className="inline-flex items-center gap-2 bg-[#D71920] px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white">{p.role[lang]}</span>
-          <h2 className="font-bebas text-6xl leading-[0.9] tracking-wide text-white xl:text-7xl">{p.name}</h2>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white" style={{ background: nl ? '#D71920' : `${accent}cc`, color: nl ? '#fff' : '#050505' }}>
+              {p.role[lang]}
+            </span>
+            {index && <span className="font-mono text-[11px] tracking-[0.3em] text-neutral-500">{index}</span>}
+          </div>
+          <h3 className="font-bebas text-6xl leading-[0.9] tracking-wide text-white xl:text-7xl" style={{ textShadow: `0 0 40px ${accent}55` }}>{p.name}</h3>
           <p className="text-sm leading-relaxed text-neutral-300 xl:text-base">{p.description[lang]}</p>
           {p.tags && p.tags.length > 0 && (
             <ul className="flex flex-wrap gap-2">
@@ -452,6 +495,8 @@ export const PartnersPage: React.FC = () => {
   const c = (k: string) => COPY[k][lang];
   const vw = useViewportWidth();
   const desktop = vw >= 1024;
+  // na komputerze każdy partner ma przypiętą scenę jak Marris Gym; na telefonie – karty z wjazdem 3D
+  const pinned = desktop && !prefersReducedMotion();
   const hero = useHeroParallax();
 
   React.useEffect(() => {
@@ -495,8 +540,8 @@ export const PartnersPage: React.FC = () => {
 
       {/* HOOFDPARTNER – przypięty na komputerze, zwykły wjazd na telefonie */}
       {featured.map(p =>
-        desktop && !prefersReducedMotion() ? (
-          <FeaturedPinned key={p.id} p={p} lang={lang} followLabel={c('follow')} />
+        pinned ? (
+          <PartnerPinned key={p.id} p={p} lang={lang} followLabel={c('follow')} side="left" heightVh={260} nl />
         ) : (
           <section key={p.id} className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-24">
             <Reveal>
@@ -512,6 +557,44 @@ export const PartnersPage: React.FC = () => {
         <VelocityMarquee items={[...allNames].reverse()} direction={-1} outline className="mt-2 text-6xl sm:text-8xl" />
       </section>
 
+      {pinned ? (
+        <>
+          {/* KOMPUTER: każdy partner i twórca – przypięta scena jak Marris Gym */}
+          {others.length > 0 && (
+            <>
+              <div className="mx-auto max-w-7xl px-6 pt-20 pb-6">
+                <RevealTitle text={c('partnersTitle')} className="font-bebas text-6xl tracking-wide" />
+              </div>
+              {others.map((p, i) => (
+                <PartnerPinned
+                  key={p.id}
+                  p={p}
+                  lang={lang}
+                  followLabel={c('follow')}
+                  side={i % 2 === 0 ? 'right' : 'left'}
+                  heightVh={210}
+                  index={`${String(i + 1).padStart(2, '0')} / ${String(others.length).padStart(2, '0')}`}
+                />
+              ))}
+            </>
+          )}
+          <div className="mx-auto max-w-7xl px-6 pt-20 pb-6">
+            <RevealTitle text={c('influencersTitle')} className="font-bebas text-6xl tracking-wide" />
+          </div>
+          {INFLUENCERS.map((p, i) => (
+            <PartnerPinned
+              key={p.id}
+              p={p}
+              lang={lang}
+              followLabel={c('follow')}
+              side={i % 2 === 0 ? 'right' : 'left'}
+              heightVh={210}
+              index={`${String(i + 1).padStart(2, '0')} / ${String(INFLUENCERS.length).padStart(2, '0')}`}
+            />
+          ))}
+        </>
+      ) : (
+        <>
       {/* POZOSTALI PARTNERZY BIZNESOWI */}
       {others.length > 0 && (
         <section className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-20">
@@ -572,6 +655,9 @@ export const PartnersPage: React.FC = () => {
           </div>
         )}
       </section>
+
+        </>
+      )}
 
       {/* CTA + formularz współpracy */}
       <section id="samenwerken" className="mx-auto max-w-7xl border-t border-neutral-900 px-4 py-16 sm:px-6 sm:py-24">

@@ -270,27 +270,6 @@ export const INFLUENCERS: Partner[] = [
       { type: 'instagram', url: 'https://www.instagram.com/berkanopoland_official/', label: '@berkanopoland_official' },
       { type: 'youtube', url: 'https://www.youtube.com/@berkanoofficial', label: '@berkanoofficial' },
     ],
-  },  {
-    id: 'aloe-massaging-hands',
-    name: 'Aloe Massaging Hands',
-    logoShape: 'photo',
-    glow: 'rgba(120,200,80,.24)',
-    role: { nl: 'Massage · Best (NB)', en: 'Massage · Best, NL', pl: 'Masaż · Best (NL)' },
-    description: {
-      nl: 'Aloe Massaging Hands is een massagepraktijk in Best, voor herstel en ontspanning van spieren na training. Via hun webshop Mike ProStore vind je o.a. massageguns, foamrollers en acupressuurmatten.',
-      en: 'Aloe Massaging Hands is a massage practice in Best (NL) for muscle recovery and relaxation after training. Their webshop Mike ProStore offers massage guns, foam rollers, acupressure mats and more.',
-      pl: 'Aloe Massaging Hands to gabinet masażu w Best (NL) – regeneracja i rozluźnienie mięśni po treningu. W ich sklepie Mike ProStore znajdziesz m.in. pistolety do masażu, rollery i maty do akupresury.',
-    },
-    logo: '/images/partners/aloe-massaging-hands-logo.webp',
-    tags: [
-      { nl: 'Massage', en: 'Massage', pl: 'Masaż' },
-      { nl: 'Herstel', en: 'Recovery', pl: 'Regeneracja' },
-      { nl: 'Best', en: 'Best', pl: 'Best' },
-    ],
-    links: [
-      { type: 'instagram', url: 'https://www.instagram.com/aloemassaginghands/', label: '@aloemassaginghands' },
-      { type: 'website', url: 'https://mikeprostore.com/', label: 'mikeprostore.com' },
-    ],
   },
 ];
 
