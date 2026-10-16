@@ -57,9 +57,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
   ];
 
   return (
-    <header className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+    <header style={{ viewTransitionName: 'site-header' } as React.CSSProperties} className={`sticky top-0 z-40 w-full transition-all duration-300 ${
       isScrolled 
-        ? 'bg-[#050505]/95 backdrop-blur-md border-b border-neutral-800/80 shadow-2xl py-3' 
+        ? 'bg-[#050505]/95 border-b border-neutral-800/80 shadow-2xl py-3' 
         : 'bg-[#050505] border-b border-neutral-800/50 py-4'
     }`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">

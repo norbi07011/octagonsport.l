@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { calcShipping, FREE_SHIPPING_THRESHOLD, ShippingQuote } from '../config/shipping';
 import { Product, CartItem, Language } from '../types';
 import { PRODUCTS } from '../data/products';
@@ -83,11 +84,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const navigate = (path: string) => {
-    setCurrentPath(path);
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', path);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window === 'undefined') { setCurrentPath(path); return; }
+    window.dispatchEvent(new Event('oct:scroll-stop'));
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    // Nowoczesne przejście między podstronami (View Transitions API), gdy przeglądarka je obsługuje
+    if (doc.startViewTransition && !reduced) {
+      doc.startViewTransition(() => {
+        flushSync(() => setCurrentPath(path));
+        window.history.pushState({}, '', path);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      });
+      return;
     }
+    setCurrentPath(path);
+    window.history.pushState({}, '', path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {

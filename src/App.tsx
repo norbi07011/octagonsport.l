@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initSmoothScroll } from './lib/smoothScroll';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { Header } from './components/layout/Header';
@@ -36,6 +37,9 @@ import { CheckCircle2, Info } from 'lucide-react';
 const AppContent: React.FC = () => {
   const { currentPath, openSizeGuide, toast } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Płynne przewijanie z bezwładnością (tylko komputer)
+  useEffect(() => initSmoothScroll(), []);
 
   // Router view selector based on path
   const renderCurrentView = () => {
