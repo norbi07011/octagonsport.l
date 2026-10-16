@@ -186,7 +186,6 @@ export const ShaderStage = forwardRef<ShaderStageHandle, Props>(({ color, mode, 
       uni = Object.fromEntries(
         ['uRes', 'uTime', 'uColor', 'uMouse', 'uFocus', 'uIntensity', 'uPulse', 'uFlash', 'uMode'].map(n => [n, gl!.getUniformLocation(prog!, n)])
       );
-      canvas.style.opacity = '1';
       resize();
       return true;
     };
@@ -246,6 +245,7 @@ export const ShaderStage = forwardRef<ShaderStageHandle, Props>(({ color, mode, 
       gl.uniform1f(uni.uFlash, s.flash);
       gl.uniform1f(uni.uMode, mode === 'carousel' ? 0 : 1);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      if (canvas.style.opacity !== '1') canvas.style.opacity = '1'; // pokaż dopiero po pierwszej klatce
       if (running && !reduced) raf = requestAnimationFrame(frame);
     };
 

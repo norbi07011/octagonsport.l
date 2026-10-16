@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TrainingVideos } from '../components/media/TrainingVideos';
 import { ProductShowcase } from '../components/showcase/ProductShowcase';
 import { SHOWCASES } from '../data/showcases';
+import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
 import { BrandMark } from '../components/layout/BrandMark';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -509,6 +510,11 @@ export const HomePage: React.FC = () => {
       {/* SHOWCASE — owijki Supreme (karuzela 3D + scroll story) */}
       {/* ========================================================================= */}
       <ProductShowcase config={SHOWCASES.wraps} />
+
+      {/* ========================================================================= */}
+      {/* LEGION KIDS — „Kies je fighter” (koszulki dziecięce Brainrot) */}
+      {/* ========================================================================= */}
+      <KidsFighterSelect />
 
       {/* ========================================================================= */}
       {/* SECTION 08 — MEN / WOMEN EDITORIAL BLOCKS */}

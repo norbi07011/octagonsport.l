@@ -1,3 +1,4 @@
+import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, getLocalizedProduct, productInCategory, getSubcategoriesFor } from '../data/products';
@@ -175,6 +176,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
           </p>
         </div>
       </div>
+
+      {/* Legion Kids – interaktywny wybór koszulki (tylko kategoria kids, bez filtra podkategorii) */}
+      {inferredCategory === 'kids' && !subParam && <KidsFighterSelect />}
 
       {/* Main Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
