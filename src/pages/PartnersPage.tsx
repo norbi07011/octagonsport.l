@@ -77,7 +77,24 @@ const COPY: Record<string, Record<Language, string>> = {
   ctaClubs: { nl: 'Aanbod voor clubs', en: 'Offers for clubs', pl: 'Oferta dla klubów' },
 };
 
-const PartnerLinks: React.FC<{ links: PartnerLink[] }> = ({ links }) => (
+const PartnerLinks: React.FC<{ links: PartnerLink[]; icons?: boolean }> = ({ links, icons }) =>
+  icons ? (
+    // telefon (przypięta scena): okrągłe ikony w jednym rzędzie – mieszczą się na ekranie
+    <div className="flex flex-wrap gap-2.5">
+      {links.map(l => (
+        <a
+          key={l.url}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${l.type}: ${l.label}`}
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/50 backdrop-blur-sm transition-colors active:bg-[#D71920]"
+        >
+          <LinkIcon type={l.type} className="h-[18px] w-[18px] text-white" />
+        </a>
+      ))}
+    </div>
+  ) : (
   <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2.5">
     {links.map(l => (
       <a
@@ -98,7 +115,7 @@ const PartnerLinks: React.FC<{ links: PartnerLink[] }> = ({ links }) => (
       </a>
     ))}
   </div>
-);
+  );
 
 const FeaturedPartner: React.FC<{ p: Partner; lang: Language; followLabel: string }> = ({ p, lang, followLabel }) => (
   <article className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 lg:gap-16 items-center">
@@ -332,8 +349,11 @@ const PartnerPinned: React.FC<{
   heightVh: number;
   index?: string;
   nl?: boolean;
-}> = ({ p, lang, followLabel, side, heightVh, index, nl }) => {
+  /** telefon: logo odpływa do góry, opis wyłania się od dołu (zamiast na boki) */
+  compact?: boolean;
+}> = ({ p, lang, followLabel, side, heightVh, index, nl, compact }) => {
   const wrap = useRef<HTMLDivElement>(null);
+  const sticky = useRef<HTMLDivElement>(null);
   const logo = useRef<HTMLDivElement>(null);
   const ring = useRef<HTMLSpanElement>(null);
   const text = useRef<HTMLDivElement>(null);
@@ -361,21 +381,23 @@ const PartnerPinned: React.FC<{
       const pT = clamp(-rect.top / total);
       pS = pS < 0 ? pT : pS + (pT - pS) * k;
       const pp = pS;
-      const t = easeInOut(clamp(pp / 0.45));
-      const x = lerp(0, 22 * dir, t);
-      const sc = lerp(1.3, 0.92, t);
+      const t = easeInOut(clamp(pp / (compact ? 0.4 : 0.45)));
+      const x = compact ? 0 : lerp(0, 22 * dir, t);
+      const sh = sticky.current?.offsetHeight || window.innerHeight;
+      const y = compact ? lerp(0, -0.33 * sh, t) : 0;
+      const sc = compact ? lerp(1.12, 0.56, t) : lerp(1.3, 0.92, t);
       const ry = lerp(-28 * dir, 0, easeOut(clamp(pp / 0.35)));
-      if (logo.current) logo.current.style.transform = `translate3d(${x}vw, 0, 0) perspective(1000px) rotateY(${ry}deg) scale(${sc})`;
+      if (logo.current) logo.current.style.transform = `translate3d(${x}vw, ${y}px, 0) perspective(1000px) rotateY(${ry}deg) scale(${sc})`;
       if (ring.current) ring.current.style.transform = `rotate(${pp * 300}deg)`;
-      const o = easeOut(clamp((pp - 0.28) / 0.25));
+      const o = easeOut(clamp((pp - (compact ? 0.3 : 0.28)) / 0.25));
       if (text.current) {
         text.current.style.opacity = String(o);
-        text.current.style.transform = `translate3d(${(1 - o) * -80 * dir}px, -50%, 0)`;
+        text.current.style.transform = compact ? `translate3d(0, ${(1 - o) * 70}px, 0)` : `translate3d(${(1 - o) * -80 * dir}px, -50%, 0)`;
         text.current.style.filter = o > 0.98 ? 'none' : `blur(${(1 - o) * 12}px)`;
         text.current.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
       }
       if (big.current) big.current.style.transform = `translate3d(${dir < 0 ? lerp(12, -55, pp) : lerp(-55, 12, pp)}%, -50%, 0)`;
-      stage.current?.set({ focusX: 0.5 + x / 100, focusY: 0.5, intensity: 0.55 + 0.5 * pp });
+      stage.current?.set({ focusX: 0.5 + x / 100, focusY: compact ? 0.5 - (0.33 * t) : 0.5, intensity: 0.55 + 0.5 * pp });
       if (running) raf = requestAnimationFrame(frame);
     };
     const io = new IntersectionObserver(([e]) => {
@@ -384,7 +406,7 @@ const PartnerPinned: React.FC<{
     }, { rootMargin: '20% 0px' });
     io.observe(el);
     return () => { running = false; cancelAnimationFrame(raf); io.disconnect(); };
-  }, [dir]);
+  }, [dir, compact]);
 
   const ringBg = nl
     ? 'conic-gradient(from 200deg, #AE1C28, #f4f4f4, #21468B, #AE1C28)'
@@ -392,13 +414,17 @@ const PartnerPinned: React.FC<{
   const glowBg = nl
     ? 'radial-gradient(circle at 30% 30%, rgba(215,25,32,.55), transparent 60%), radial-gradient(circle at 70% 75%, rgba(33,70,139,.6), transparent 60%)'
     : `radial-gradient(circle, ${accent}99, transparent 65%)`;
-  const box = wide
+  const box = compact
+    ? wide
+      ? { width: 'min(80vw, 360px)', height: 'min(50vw, 225px)' }
+      : { width: 'min(64vw, 38svh, 300px)', height: 'min(64vw, 38svh, 300px)' }
+    : wide
     ? { width: 'min(64vh, 560px)', height: 'min(40vh, 350px)' }
     : { width: 'min(46vh, 420px)', height: 'min(46vh, 420px)' };
 
   return (
     <div ref={wrap} className="relative border-b border-neutral-900" style={{ height: `${heightVh}vh` }}>
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
+      <div ref={sticky} className="sticky top-0 h-[100svh] overflow-hidden">
         <div aria-hidden className="absolute inset-0" style={{ background: `radial-gradient(ellipse 55% 55% at ${dir < 0 ? 40 : 60}% 50%, ${accent}40, transparent 70%)` }} />
         <div aria-hidden className="absolute inset-0">
           <ShaderStage ref={stage} color={accent} mode="story" />
@@ -407,7 +433,7 @@ const PartnerPinned: React.FC<{
           ref={big}
           aria-hidden
           className="oct-outline-text pointer-events-none absolute left-0 top-1/2 whitespace-nowrap font-bebas leading-none"
-          style={{ fontSize: 'clamp(160px, 26vw, 400px)', transform: 'translate3d(12%, -50%, 0)', willChange: 'transform' }}
+          style={{ fontSize: compact ? 'min(44vw, 26svh)' : 'clamp(160px, 26vw, 400px)', transform: 'translate3d(12%, -50%, 0)', willChange: 'transform' }}
         >
           {p.name.toUpperCase()} · {p.name.toUpperCase()}
         </div>
@@ -432,8 +458,8 @@ const PartnerPinned: React.FC<{
         {/* Opis */}
         <div
           ref={text}
-          className={`absolute top-1/2 w-[min(540px,44vw)] space-y-5 ${dir < 0 ? 'right-[5vw]' : 'left-[5vw]'}`}
-          style={{ opacity: 0, transform: `translate3d(${-80 * dir}px,-50%,0)`, willChange: 'transform, opacity, filter' }}
+          className={compact ? 'absolute inset-x-5 top-[31%] bottom-[3%] flex flex-col justify-center space-y-3' : `absolute top-1/2 w-[min(540px,44vw)] space-y-5 ${dir < 0 ? 'right-[5vw]' : 'left-[5vw]'}`}
+          style={{ opacity: 0, transform: compact ? 'translate3d(0,70px,0)' : `translate3d(${-80 * dir}px,-50%,0)`, willChange: 'transform, opacity, filter' }}
         >
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-2 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white" style={{ background: nl ? '#D71920' : `${accent}cc`, color: nl ? '#fff' : '#050505' }}>
@@ -441,18 +467,18 @@ const PartnerPinned: React.FC<{
             </span>
             {index && <span className="font-mono text-[11px] tracking-[0.3em] text-neutral-500">{index}</span>}
           </div>
-          <h3 className="font-bebas text-6xl leading-[0.9] tracking-wide text-white xl:text-7xl" style={{ textShadow: `0 0 40px ${accent}55` }}>{p.name}</h3>
-          <p className="text-sm leading-relaxed text-neutral-300 xl:text-base">{p.description[lang]}</p>
+          <h3 className={`font-bebas leading-[0.9] tracking-wide text-white ${compact ? 'text-[clamp(36px,11vw,52px)] [overflow-wrap:anywhere]' : 'text-6xl xl:text-7xl'}`} style={{ textShadow: `0 0 40px ${accent}55` }}>{p.name}</h3>
+          <p className={compact ? 'text-[13px] leading-relaxed text-neutral-200 [text-shadow:0_1px_8px_#000]' : 'text-sm leading-relaxed text-neutral-300 xl:text-base'}>{p.description[lang]}</p>
           {p.tags && p.tags.length > 0 && (
             <ul className="flex flex-wrap gap-2">
               {p.tags.map((tg, i) => (
-                <li key={i} className="border border-white/15 bg-black/30 px-3 py-1.5 font-condensed text-[11px] font-bold uppercase tracking-wider text-neutral-200 backdrop-blur-sm">{tg[lang]}</li>
+                <li key={i} className={`border border-white/15 bg-black/30 font-condensed font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-1.5 text-[11px]'} uppercase tracking-wider text-neutral-200 backdrop-blur-sm`}>{tg[lang]}</li>
               ))}
             </ul>
           )}
-          <div className="space-y-3 pt-1">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-400">{followLabel}</p>
-            <PartnerLinks links={p.links} />
+          <div className={compact ? 'space-y-2' : 'space-y-3 pt-1'}>
+            {!compact && <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-400">{followLabel}</p>}
+            <PartnerLinks links={p.links} icons={compact} />
           </div>
         </div>
       </div>
@@ -494,9 +520,11 @@ export const PartnersPage: React.FC = () => {
   const lang = language as Language;
   const c = (k: string) => COPY[k][lang];
   const vw = useViewportWidth();
-  const desktop = vw >= 1024;
-  // na komputerze każdy partner ma przypiętą scenę jak Marris Gym; na telefonie – karty z wjazdem 3D
-  const pinned = desktop && !prefersReducedMotion();
+  // każdy partner ma przypiętą scenę jak Marris Gym – na komputerze logo odsuwa się w bok,
+  // na telefonie/tablecie w pionie do góry (compact). Przy „ogranicz ruch” – zwykłe karty.
+  const compact = vw < 1024;
+  const pinned = !prefersReducedMotion();
+  const pinH = (d: number) => (compact ? Math.round(d * 0.8) : d);
   const hero = useHeroParallax();
 
   React.useEffect(() => {
@@ -541,7 +569,7 @@ export const PartnersPage: React.FC = () => {
       {/* HOOFDPARTNER – przypięty na komputerze, zwykły wjazd na telefonie */}
       {featured.map(p =>
         pinned ? (
-          <PartnerPinned key={p.id} p={p} lang={lang} followLabel={c('follow')} side="left" heightVh={260} nl />
+          <PartnerPinned key={p.id} p={p} lang={lang} followLabel={c('follow')} side="left" heightVh={pinH(260)} compact={compact} nl />
         ) : (
           <section key={p.id} className="mx-auto max-w-7xl border-b border-neutral-900 px-4 py-16 sm:px-6 sm:py-24">
             <Reveal>
@@ -562,8 +590,8 @@ export const PartnersPage: React.FC = () => {
           {/* KOMPUTER: każdy partner i twórca – przypięta scena jak Marris Gym */}
           {others.length > 0 && (
             <>
-              <div className="mx-auto max-w-7xl px-6 pt-20 pb-6">
-                <RevealTitle text={c('partnersTitle')} className="font-bebas text-6xl tracking-wide" />
+              <div className="mx-auto max-w-7xl px-4 pt-16 pb-6 sm:px-6 sm:pt-20">
+                <RevealTitle text={c('partnersTitle')} className="font-bebas text-5xl tracking-wide sm:text-6xl" />
               </div>
               {others.map((p, i) => (
                 <PartnerPinned
@@ -572,14 +600,15 @@ export const PartnersPage: React.FC = () => {
                   lang={lang}
                   followLabel={c('follow')}
                   side={i % 2 === 0 ? 'right' : 'left'}
-                  heightVh={210}
+                  heightVh={pinH(210)}
+                  compact={compact}
                   index={`${String(i + 1).padStart(2, '0')} / ${String(others.length).padStart(2, '0')}`}
                 />
               ))}
             </>
           )}
-          <div className="mx-auto max-w-7xl px-6 pt-20 pb-6">
-            <RevealTitle text={c('influencersTitle')} className="font-bebas text-6xl tracking-wide" />
+          <div className="mx-auto max-w-7xl px-4 pt-16 pb-6 sm:px-6 sm:pt-20">
+            <RevealTitle text={c('influencersTitle')} className="font-bebas text-5xl tracking-wide sm:text-6xl" />
           </div>
           {INFLUENCERS.map((p, i) => (
             <PartnerPinned
@@ -588,7 +617,8 @@ export const PartnersPage: React.FC = () => {
               lang={lang}
               followLabel={c('follow')}
               side={i % 2 === 0 ? 'right' : 'left'}
-              heightVh={210}
+              heightVh={pinH(210)}
+              compact={compact}
               index={`${String(i + 1).padStart(2, '0')} / ${String(INFLUENCERS.length).padStart(2, '0')}`}
             />
           ))}
