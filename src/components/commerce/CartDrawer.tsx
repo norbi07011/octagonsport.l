@@ -1,4 +1,5 @@
 import React from 'react';
+import { RollingNumber } from '../fx/Kinetic';
 import { useStore } from '../../context/StoreContext';
 import { X, Trash2, Plus, Minus, ArrowRight, Truck, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { PRODUCTS, getLocalizedProduct } from '../../data/products';
@@ -42,12 +43,12 @@ export const CartDrawer: React.FC = () => {
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        className="oct-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
         onClick={() => setIsCartOpen(false)}
       />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-md bg-[#0B0B0B] border-l border-neutral-800 h-full flex flex-col z-50 shadow-2xl">
+      <div className="oct-drawer relative w-full max-w-md bg-[#0B0B0B] border-l border-neutral-800 h-full flex flex-col z-50 shadow-2xl">
         {/* Header */}
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between bg-[#080808]">
           <div className="flex items-center gap-2">
@@ -76,12 +77,12 @@ export const CartDrawer: React.FC = () => {
                 <span>{t('cart.freeShippingRemaining', { amount: amountForFreeShipping.toFixed(2) })}</span>
               )}
             </span>
-            <span className="font-mono font-bold text-white text-xs">{freeShippingProgress}%</span>
+            <span className="font-mono font-bold text-white text-xs"><RollingNumber value={freeShippingProgress} format={n => `${Math.round(n)}%`} /></span>
           </div>
-          <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+          <div className="relative w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ${amountForFreeShipping === 0 ? 'bg-emerald-500' : 'bg-[#D71920]'}`}
-              style={{ width: `${freeShippingProgress}%` }}
+              className={`oct-progress relative h-full rounded-full transition-[width] duration-1000 ease-[cubic-bezier(.16,1,.3,1)] ${amountForFreeShipping === 0 ? 'bg-emerald-500' : 'bg-[#D71920]'}`}
+              style={{ width: `${freeShippingProgress}%`, boxShadow: amountForFreeShipping === 0 ? '0 0 14px rgba(16,185,129,.8)' : '0 0 14px rgba(215,25,32,.8)' }}
             />
           </div>
         </div>
@@ -103,12 +104,13 @@ export const CartDrawer: React.FC = () => {
               </button>
             </div>
           ) : (
-            cart.map((item) => {
+            cart.map((item, itemIdx) => {
               const localizedP = getLocalizedProduct(item.product, language);
               return (
                 <div 
                   key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}`}
-                  className="flex gap-3 bg-[#111111] border border-neutral-800/80 p-3 rounded-none relative"
+                  className="oct-rise flex gap-3 bg-[#111111] border border-neutral-800/80 p-3 rounded-none relative hover:border-neutral-600 transition-colors"
+                  style={{ animationDelay: `${150 + itemIdx * 70}ms` }}
                 >
                   {/* Thumbnail */}
                   <div className="w-20 h-24 bg-neutral-900 shrink-0 overflow-hidden">
@@ -213,7 +215,7 @@ export const CartDrawer: React.FC = () => {
             <div className="space-y-1.5 text-xs text-neutral-300 font-condensed tracking-wider">
               <div className="flex justify-between">
                 <span>{t('cart.subtotal')}</span>
-                <span className="font-mono text-sm font-bold text-white tabular-nums">€{subtotal.toFixed(2)}</span>
+                <span className="font-mono text-sm font-bold text-white tabular-nums">€<RollingNumber value={subtotal} /></span>
               </div>
               <div className="flex justify-between">
                 <span>{t('cart.shipping')} (≈ {shippingQuote.totalKg.toFixed(1).replace('.', ',')} kg)</span>
@@ -223,7 +225,7 @@ export const CartDrawer: React.FC = () => {
               </div>
               <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-neutral-800">
                 <span className="font-bebas text-lg">{t('cart.total')} (INCL. BTW)</span>
-                <span className="font-mono text-lg text-[#D71920] tabular-nums">€{total.toFixed(2)}</span>
+                <span className="font-mono text-lg text-[#D71920] tabular-nums">€<RollingNumber value={total} /></span>
               </div>
             </div>
 

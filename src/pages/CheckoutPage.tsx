@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext';
 import { getLocalizedProduct } from '../data/products';
 import { calcShipping, formatEur, FREE_SHIPPING_THRESHOLD, TIERS } from '../config/shipping';
 import { openWhatsApp } from '../components/layout/WhatsAppWidget';
+import { RollingNumber } from '../components/fx/Kinetic';
 
 type L = 'nl' | 'en' | 'pl';
 export const PENDING_PAYMENT_KEY = 'octagon_pending_payment';
@@ -274,7 +275,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="mt-5 space-y-2 border-t border-neutral-800 pt-4 text-sm">
               <div className="flex justify-between text-neutral-300"><span>{tr('Subtotaal', 'Subtotal', 'Produkty')}</span><span className="font-mono">{formatEur(subtotal)}</span></div>
               <div className="flex justify-between text-neutral-300"><span>{tr('Verzendkosten', 'Shipping', 'Wysyłka')}</span><span className="font-mono">{quote.fee === 0 ? <span className="text-emerald-400">GRATIS</span> : formatEur(quote.fee)}</span></div>
-              <div className="flex justify-between border-t border-neutral-800 pt-3 text-lg font-bold"><span>{tr('Totaal', 'Total', 'Razem')}</span><span className="font-mono text-[#D71920]">{formatEur(total)}</span></div>
+              <div className="flex justify-between border-t border-neutral-800 pt-3 text-lg font-bold"><span>{tr('Totaal', 'Total', 'Razem')}</span><span className="font-mono text-[#D71920]"><RollingNumber value={total} format={formatEur} /></span></div>
               <p className="text-right text-[11px] text-neutral-500">{tr('waarvan 21% btw', 'incl. 21% VAT', 'w tym 21% VAT')} {formatEur(vat)}</p>
             </div>
 

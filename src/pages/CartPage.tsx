@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RollingNumber } from '../components/fx/Kinetic';
 import { useStore } from '../context/StoreContext';
 import { getLocalizedProduct } from '../data/products';
 import { 
@@ -258,7 +259,7 @@ export const CartPage: React.FC = () => {
                 </div>
                 <div className="w-full h-2 bg-neutral-900 border border-neutral-800 overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-500 ${
+                    className={`oct-progress relative h-full transition-[width] duration-1000 ease-[cubic-bezier(.16,1,.3,1)] ${
                       amountForFreeShipping === 0 ? 'bg-emerald-500' : 'bg-[#D71920]'
                     }`}
                     style={{ width: `${freeShippingProgress}%` }}
@@ -268,7 +269,7 @@ export const CartPage: React.FC = () => {
 
               {/* Items Card Table */}
               <div className="bg-[#0B0B0B] border border-neutral-800 divide-y divide-neutral-800/80">
-                {cart.map((item) => {
+                {cart.map((item, itemIdx) => {
                   const locP = getLocalizedProduct(item.product, language);
                   const lineTotal = Number((item.product.price * item.quantity).toFixed(2));
                   const inWish = isInWishlist(item.product.id);
@@ -276,7 +277,8 @@ export const CartPage: React.FC = () => {
                   return (
                     <div 
                       key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}`}
-                      className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between hover:bg-[#0E0E0E] transition-colors"
+                      className="oct-rise p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between hover:bg-[#0E0E0E] transition-colors"
+                      style={{ animationDelay: `${itemIdx * 80}ms` }}
                     >
                       {/* Thumbnail & Info */}
                       <div className="flex gap-4 items-start sm:items-center flex-1">
@@ -361,7 +363,7 @@ export const CartPage: React.FC = () => {
                         {/* Line price */}
                         <div className="text-right">
                           <span className="font-mono text-lg font-black text-white tabular-nums block">
-                            €{lineTotal.toFixed(2)}
+                            €<RollingNumber value={lineTotal} />
                           </span>
                           <span className="font-mono text-[11px] text-neutral-500 tabular-nums">
                             €{item.product.price.toFixed(2)} / {language === 'pl' ? 'szt.' : 'st.'}
@@ -444,7 +446,7 @@ export const CartPage: React.FC = () => {
               <div className="border-t border-neutral-800 pt-4 space-y-2.5 text-xs font-mono text-neutral-300">
                 <div className="flex justify-between">
                   <span>{language === 'pl' ? 'Wartość koszyka (subtotal):' : 'Subtotaal artikelen:'}</span>
-                  <span className="tabular-nums font-bold text-white">€{subtotal.toFixed(2)}</span>
+                  <span className="tabular-nums font-bold text-white">€<RollingNumber value={subtotal} /></span>
                 </div>
                 <div className="flex justify-between">
                   <span>{language === 'pl' ? 'Dostawa' : language === 'en' ? 'Shipping' : 'Verzendkosten'} (≈ {shippingQuote.totalKg.toFixed(1).replace('.', ',')} kg):</span>
@@ -464,14 +466,14 @@ export const CartPage: React.FC = () => {
                 )}
                 <div className="flex justify-between text-neutral-500 pt-1 text-[11px]">
                   <span>{language === 'pl' ? 'W tym 21% holenderskiego BTW:' : 'Waarvan 21% BTW:'}</span>
-                  <span className="tabular-nums">€{vatAmount.toFixed(2)}</span>
+                  <span className="tabular-nums">€<RollingNumber value={vatAmount} /></span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-white pt-3 border-t border-neutral-800">
                   <span className="font-bebas text-2xl">
                     {language === 'pl' ? 'DO ZAPŁATY (BRUTTO):' : 'TOTAAL (INCL. BTW):'}
                   </span>
                   <span className="font-mono text-2xl text-[#D71920] tabular-nums font-black">
-                    €{finalTotal.toFixed(2)}
+                    €<RollingNumber value={finalTotal} />
                   </span>
                 </div>
               </div>

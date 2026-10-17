@@ -84,3 +84,39 @@ export const MagneticButton: React.FC<
     </button>
   );
 };
+
+/** Liczba, która płynnie „dojeżdża” do nowej wartości (np. suma w koszyku). */
+export const RollingNumber: React.FC<{ value: number; format?: (n: number) => string; duration?: number; className?: string }> = ({
+  value,
+  format = n => n.toFixed(2),
+  duration = 700,
+  className,
+}) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const shown = useRef(value);
+  useEffect(() => {
+    const el = ref.current;
+    const from = shown.current;
+    const to = value;
+    if (!el) return;
+    if (from === to || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      shown.current = to;
+      el.textContent = format(to);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const e = 1 - Math.pow(1 - t, 4);
+      shown.current = from + (to - from) * e;
+      el.textContent = format(shown.current);
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else shown.current = to;
+    };
+    raf = requestAnimationFrame(tick);
+    el.animate([{ transform: 'translateY(-3px)', filter: 'brightness(1.6)' }, { transform: 'none', filter: 'none' }], { duration: 500, easing: 'ease-out' });
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration, format]);
+  return <span ref={ref} className={`inline-block tabular-nums ${className || ''}`}>{format(shown.current)}</span>;
+};
