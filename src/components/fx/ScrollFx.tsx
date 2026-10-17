@@ -187,3 +187,69 @@ export const ScrollProgress: React.FC<{ color?: string }> = ({ color = '#D71920'
     </div>
   );
 };
+
+/** Licznik, który „nabija” do wartości, gdy pojawi się na ekranie. */
+export const CountUp: React.FC<{ to: number; suffix?: string; prefix?: string; duration?: number; className?: string }> = ({
+  to,
+  suffix = '',
+  prefix = '',
+  duration = 1600,
+  className = '',
+}) => {
+  const [ref, inView] = useInView<HTMLSpanElement>();
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    if (prefersReducedMotion()) { setV(to); return; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      setV(Math.round(to * (1 - Math.pow(1 - t, 4))));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, to, duration]);
+  return <span ref={ref} className={`tabular-nums ${className}`}>{prefix}{v}{suffix}</span>;
+};
+
+/**
+ * Automatyczne wjazdy dla zwykłych podstron: bloki treści (dzieci sekcji) wjeżdżają w 3D z rozmycia,
+ * gdy pojawią się na ekranie – po kolei w obrębie rodzica. Nie wymaga zmian w samych stronach.
+ */
+export const AutoReveal: React.FC<{ children: React.ReactNode; enabled?: boolean }> = ({ children, enabled = true }) => {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !enabled || prefersReducedMotion() || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    const seen = new WeakSet<Element>();
+    // od najgłębszych: najpierw oznacz małe bloki, potem pomiń rodziców, którzy je zawierają
+    const deepFirst = () => {
+      const levels = [':scope > div > * > * > *', ':scope > div > * > *', ':scope > div > *'];
+      levels.forEach(sel => {
+        el.querySelectorAll(sel).forEach(c => {
+          if (seen.has(c) || !(c instanceof HTMLElement)) return;
+          const cs = getComputedStyle(c);
+          if (cs.position === 'fixed' || cs.position === 'sticky' || cs.position === 'absolute' || cs.display === 'contents') return;
+          if (c.offsetHeight < 24 || c.offsetHeight > window.innerHeight * 1.4) return;
+          if (c.querySelector('.oct-reveal') || c.closest('.oct-reveal')) return;
+          if (c.querySelector('form, input, select, textarea') && c.offsetHeight > 400) return;
+          seen.add(c);
+          const i = Array.prototype.indexOf.call(c.parentElement?.children || [], c);
+          c.classList.add('oct-reveal');
+          c.style.setProperty('--d', `${Math.min(Math.max(i, 0), 6) * 80}ms`);
+          io.observe(c);
+        });
+      });
+    };
+    const t = window.setTimeout(deepFirst, 30);
+    return () => { window.clearTimeout(t); io.disconnect(); };
+  }, [enabled]);
+  return <div ref={root}>{children}</div>;
+};

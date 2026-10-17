@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initSmoothScroll } from './lib/smoothScroll';
+import { AutoReveal } from './components/fx/ScrollFx';
 import { IntroOverlay, shouldShowIntro } from './components/fx/IntroOverlay';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
@@ -157,7 +158,13 @@ const AppContent: React.FC = () => {
 
       {/* 4. Main Page View */}
       <main className="flex-1">
-        {renderCurrentView()}
+        {(() => {
+          // zwykłe podstrony: automatyczne wjazdy bloków przy przewijaniu
+          const clean = currentPath.split('?')[0];
+          const auto = ['/clubs', '/wholesale', '/hurt', '/contact', '/media', '/custom-teamwear', '/sale', '/wishlist',
+            '/size-guide'].includes(clean) || !!findLegalDoc(clean);
+          return auto ? <AutoReveal key={clean}>{renderCurrentView()}</AutoReveal> : renderCurrentView();
+        })()}
       </main>
 
       {/* 5. Combat Sports Footer */}
