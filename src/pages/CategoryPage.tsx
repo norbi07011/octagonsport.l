@@ -1,5 +1,6 @@
 import { CategorySpotlight } from '../components/showcase/CategorySpotlight';
 import { spotlightForCategory } from '../data/spotlights';
+import { KidsGearUp } from '../components/showcase/KidsGearUp';
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, getLocalizedProduct, productInCategory, getSubcategoriesFor } from '../data/products';
@@ -183,6 +184,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
         const spot = spotlightForCategory(inferredCategory, isNewPage);
         return spot ? <CategorySpotlight key={spot.id} config={spot} /> : null;
       })()}
+      {inferredCategory === 'kids' && !subParam && <KidsGearUp />}
 
       {/* Main Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

@@ -3,6 +3,7 @@ import { TrainingVideos } from '../components/media/TrainingVideos';
 import { ProductShowcase } from '../components/showcase/ProductShowcase';
 import { SHOWCASES } from '../data/showcases';
 import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
+import { KidsGearUp } from '../components/showcase/KidsGearUp';
 import { KineticText } from '../components/fx/Kinetic';
 import { clamp, isFinePointer, prefersReducedMotion } from '../lib/motion';
 import { BrandMark } from '../components/layout/BrandMark';
@@ -546,6 +547,7 @@ export const HomePage: React.FC = () => {
       {/* LEGION KIDS — „Kies je fighter” (koszulki dziecięce Brainrot) */}
       {/* ========================================================================= */}
       <KidsFighterSelect />
+      <KidsGearUp />
 
       {/* ========================================================================= */}
       {/* SECTION 08 — MEN / WOMEN EDITORIAL BLOCKS */}

@@ -54,6 +54,13 @@ for c, pid in [('black', 'oct-5892'), ('red', 'oct-5850'), ('blue', 'oct-5868'),
 for k, pid in [('bull', 'oct-6009'), ('croc', 'oct-6008'), ('gorilla', 'oct-6004'), ('tiger', 'oct-6010')]:
     add(f'kids-{k}-back', pid, 0)
     add(f'kids-{k}-front', pid, 1)
+# Kids Gear Up – zwierzaki: rękawice (bok), kask (przód, otwory przezroczyste), ochraniacze (para)
+for k, g, h, sh in [('bear', 'oct-5627', 'oct-6063', 'oct-6055'), ('bull', 'oct-5629', 'oct-6062', 'oct-6058'),
+                    ('croc', 'oct-5628', 'oct-6059', 'oct-6054'), ('monkey', 'oct-5626', 'oct-6061', 'oct-6056'),
+                    ('tiger', 'oct-5625', 'oct-6060', 'oct-6057')]:
+    add(f'kidsgear-{k}-gloves', g, 1)
+    add(f'kidsgear-{k}-helmet', h, 0, holes=True)
+    add(f'kidsgear-{k}-shins', sh, 3)
 # Karty kategorii
 for prefix, items in {
     'men': [(6040, 0, 1), (6038, 0, 1), (6035, 0, 1), (6039, 0, 1)],
