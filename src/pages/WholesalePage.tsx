@@ -57,7 +57,7 @@ export const WholesalePage: React.FC = () => {
             <Building2 className="w-4 h-4 text-[#D71920]" />
             <span className="text-xs font-mono tracking-widest uppercase text-red-300 font-bold">B2B</span>
           </div>
-          <h1 className="font-bebas text-5xl sm:text-7xl text-white uppercase leading-none">
+          <h1 className="font-bebas text-[clamp(38px,11vw,48px)] sm:text-7xl text-white uppercase leading-none [overflow-wrap:anywhere] hyphens-auto">
             {t('wholesale.title')}
           </h1>
           <p className="mt-3 text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto font-body leading-relaxed">

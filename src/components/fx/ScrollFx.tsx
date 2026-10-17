@@ -17,9 +17,12 @@ export const useInView = <T extends Element>(rootMargin = '0px 0px -12% 0px') =>
     const el = ref.current;
     if (!el) return;
     if (!('IntersectionObserver' in window) || prefersReducedMotion()) { setInView(true); return; }
+    // górny margines „do nieba”: elementy przeskoczone szybkim scrollem (już nad ekranem) też się pokażą
+    const margin = rootMargin.split(' ');
+    margin[0] = '99999px';
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { setInView(true); io.disconnect(); }
-    }, { rootMargin, threshold: 0.08 });
+    }, { rootMargin: margin.join(' '), threshold: 0 });
     io.observe(el);
     return () => io.disconnect();
   }, [rootMargin]);
@@ -227,7 +230,7 @@ export const AutoReveal: React.FC<{ children: React.ReactNode; enabled?: boolean
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    }, { rootMargin: '99999px 0px -8% 0px', threshold: 0 });
     const seen = new WeakSet<Element>();
     // od najgłębszych: najpierw oznacz małe bloki, potem pomiń rodziców, którzy je zawierają
     const deepFirst = () => {

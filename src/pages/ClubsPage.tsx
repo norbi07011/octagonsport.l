@@ -58,7 +58,7 @@ export const ClubsPage: React.FC = () => {
               </span>
             </div>
 
-            <h1 className="font-bebas text-5xl sm:text-7xl text-white uppercase leading-none">
+            <h1 className="font-bebas text-[clamp(38px,11vw,48px)] sm:text-7xl text-white uppercase leading-none [overflow-wrap:anywhere] hyphens-auto">
               {t('clubs.title')}
             </h1>
 
