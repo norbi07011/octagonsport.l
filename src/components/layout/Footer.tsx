@@ -1,8 +1,60 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { VelocityMarquee } from '../fx/ScrollFx';
+import { PARTNERS, INFLUENCERS } from '../../data/partners';
 import { COMPANY, COMPANY_ADDRESS_LINE } from '../../config/company';
 import { BrandMark } from './BrandMark';
 import { useStore } from '../../context/StoreContext';
 import { ShieldCheck, Truck, RotateCcw, Award, Check } from 'lucide-react';
+
+/**
+ * Finał strony: ogromny napis OCTAGON, który przy dojściu do końca strony
+ * wysuwa się i „wypełnia” czerwienią od dołu (sterowane scrollem).
+ */
+const FooterWordmark: React.FC = () => {
+  const box = useRef<HTMLDivElement>(null);
+  const word = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = box.current;
+      const w = word.current;
+      if (!el || !w) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const p = reduced ? 1 : Math.min(1, Math.max(0, (vh - r.top) / Math.max(r.height, 1)));
+      const fill = Math.round(Math.min(1, p * 1.25) * 100);
+      w.style.transform = `translate3d(0, ${(1 - p) * 35}%, 0) scale(${0.92 + p * 0.08})`;
+      w.style.backgroundImage = `linear-gradient(to top, #D71920 ${fill}%, rgba(255,255,255,.04) ${fill}%)`;
+      w.style.letterSpacing = `${(1 - p) * 0.12}em`;
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('resize', on);
+    update();
+    return () => { window.removeEventListener('scroll', on); window.removeEventListener('resize', on); cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <div ref={box} aria-hidden className="relative overflow-hidden border-t border-neutral-900 bg-[#030303] pt-6">
+      <div
+        ref={word}
+        className="select-none text-center font-bebas leading-[0.8] text-transparent"
+        style={{
+          fontSize: 'clamp(80px, 22vw, 360px)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextStroke: '1px rgba(255,255,255,.12)',
+          backgroundImage: 'linear-gradient(to top, #D71920 0%, rgba(255,255,255,.04) 0%)',
+          transform: 'translate3d(0,35%,0)',
+          willChange: 'transform',
+        }}
+      >
+        OCTAGON
+      </div>
+    </div>
+  );
+};
 
 export const Footer: React.FC = () => {
   const { navigate, language, t, showToast } = useStore();
@@ -253,6 +305,14 @@ export const Footer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Partnerzy – pasek reagujący na tempo przewijania */}
+      <div className="border-t border-neutral-900 py-5">
+        <VelocityMarquee items={[...PARTNERS, ...INFLUENCERS].map(p => p.name)} outline className="text-4xl sm:text-5xl" />
+      </div>
+
+      {/* Wielki finał */}
+      <FooterWordmark />
 
       {/* Copyright Bottom Bar */}
       <div className="border-t border-neutral-900 bg-[#020202] py-4 px-4 sm:px-6 text-[11px] text-neutral-500">

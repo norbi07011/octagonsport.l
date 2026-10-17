@@ -31,13 +31,27 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isCartHovered, setIsCartHovered] = useState(false);
 
+  // nagłówek chowa się przy przewijaniu w dół, wraca przy przewijaniu w górę
+  const [isHidden, setIsHidden] = useState(false);
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+    let lastY = window.scrollY;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const y = window.scrollY;
+      setIsScrolled(y > 20);
+      const dy = y - lastY;
+      if (Math.abs(dy) > 6) {
+        setIsHidden(dy > 0 && y > 320);
+        lastY = y;
+      }
+      if (y < 120) setIsHidden(false);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(raf); };
   }, []);
+  const hidden = isHidden && !activeMegaMenu && !isMobileMenuOpen && !isLangDropdownOpen && !isCartHovered;
 
   const handleNavClick = (path: string) => {
     setActiveMegaMenu(null);
@@ -57,7 +71,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
   ];
 
   return (
-    <header style={{ viewTransitionName: 'site-header' } as React.CSSProperties} className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+    <header
+      style={{ viewTransitionName: 'site-header', transform: hidden ? 'translateY(-110%)' : 'none', transition: 'transform .45s cubic-bezier(.16,1,.3,1), background-color .3s, padding .3s, box-shadow .3s' } as React.CSSProperties}
+      className={`sticky top-0 z-40 w-full ${
       isScrolled 
         ? 'bg-[#050505]/95 border-b border-neutral-800/80 shadow-2xl py-3' 
         : 'bg-[#050505] border-b border-neutral-800/50 py-4'

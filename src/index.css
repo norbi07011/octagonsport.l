@@ -253,3 +253,8 @@
   .oct-drawer, .oct-fade-in { animation: none; }
   .oct-progress::after { animation: none; }
 }
+
+/* ===== Menu mobilne ===== */
+@keyframes oct-menu-in { from { transform: translateX(-100%); clip-path: inset(0 0 0 0 round 0 40px 40px 0); } to { transform: none; clip-path: inset(0); } }
+.oct-menu-in { animation: oct-menu-in .6s cubic-bezier(.16,1,.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .oct-menu-in { animation: none; } }

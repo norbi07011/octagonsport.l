@@ -4,6 +4,16 @@ import { useStore } from '../../context/StoreContext';
 import { ChevronRight, ChevronDown, Flame, Globe, X, Award } from 'lucide-react';
 import { TOP_CATEGORIES, getSubcategoriesFor } from '../../data/products';
 
+/** Miniatury kategorii (wycięte zdjęcia z animacji) */
+const CAT_THUMB: Record<string, string> = {
+  heren: '/showcase/men-6040-a.webp',
+  dames: '/showcase/women-6209-a.webp',
+  kids: '/showcase/kids-bull-back.webp',
+  'fight-gear': '/showcase/kevlar-red-pair.webp',
+  training: '/showcase/training-6084-a.webp',
+  accessoires: '/showcase/acc-6028-a.webp',
+};
+
 const NAV_KEY: Record<string, string> = {
   heren: 'men',
   dames: 'women',
@@ -37,12 +47,12 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 lg:hidden flex">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        className="oct-fade-in fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="relative w-4/5 max-w-sm bg-[#080808] border-r border-neutral-800 h-full flex flex-col z-50 overflow-y-auto">
+      {/* Drawer – pełny ekran na telefonie */}
+      <div className="oct-menu-in relative w-full sm:max-w-md bg-[#080808] border-r border-neutral-800 h-full flex flex-col z-50 overflow-y-auto" data-native-scroll>
         {/* Drawer Header */}
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -81,19 +91,32 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
         {/* Main Categories Navigation */}
         <nav className="p-4 space-y-1 flex-1">
-          {TOP_CATEGORIES.map(cat => {
+          {TOP_CATEGORIES.map((cat, ci) => {
             const subs = getSubcategoriesFor(cat);
             const label = t(`nav.${NAV_KEY[cat]}`);
+            const open = expandedSection === cat;
             return (
-              <div key={cat} className="border-b border-neutral-800/60 pb-1">
+              <div key={cat} className="oct-rise border-b border-neutral-800/60 pb-1" style={{ animationDelay: `${120 + ci * 60}ms` }}>
                 <button
                   onClick={() => toggleSection(cat)}
-                  className={`w-full py-3 flex items-center justify-between font-bebas text-xl tracking-wider ${cat === 'fight-gear' ? 'text-[#D71920]' : 'text-white'}`}
+                  className={`group relative w-full py-3 flex items-center justify-between font-bebas text-3xl tracking-wider ${cat === 'fight-gear' ? 'text-[#D71920]' : 'text-white'}`}
                 >
-                  <span>{label}</span>
-                  {expandedSection === cat ? <ChevronDown className="w-4 h-4 text-[#D71920]" /> : <ChevronRight className="w-4 h-4 text-neutral-500" />}
+                  <span className="transition-transform duration-300 group-active:translate-x-1">{label}</span>
+                  <span className="flex items-center gap-3">
+                    {CAT_THUMB[cat] && (
+                      <img
+                        src={CAT_THUMB[cat]}
+                        alt=""
+                        loading="lazy"
+                        className={`h-12 w-12 object-contain transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] ${open ? 'scale-125 -rotate-6' : 'scale-100'}`}
+                        style={{ filter: 'drop-shadow(0 6px 12px rgba(215,25,32,.35))' }}
+                      />
+                    )}
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-0 text-[#D71920]' : '-rotate-90 text-neutral-500'}`} />
+                  </span>
                 </button>
-                {expandedSection === cat && (
+                <div className="grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(.16,1,.3,1)]" style={{ gridTemplateRows: open ? '1fr' : '0fr' }}>
+                  <div className="overflow-hidden">
                   <div className="pl-3 pb-3 space-y-2 text-sm text-neutral-400">
                     <button onClick={() => handleNavigate(`/category/${cat}`)} className="block hover:text-white text-left w-full font-semibold text-white">
                       {language === 'pl' ? 'Zobacz wszystko' : language === 'en' ? 'View all' : 'Bekijk alles'} →
@@ -104,7 +127,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                       </button>
                     ))}
                   </div>
-                )}
+                  </div>
+                </div>
               </div>
             );
           })}
