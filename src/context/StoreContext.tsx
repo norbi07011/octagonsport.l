@@ -75,10 +75,20 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation state with browser history sync
+  // ukośnik na końcu adresu (np. /category/heren/ z prerenderowanych stron SEO) usuwamy
+  const normalize = (p: string) => {
+    const [path, query] = p.split('?');
+    const clean = path.length > 1 ? path.replace(/\/+$/, '') : path;
+    return query !== undefined ? `${clean}?${query}` : clean;
+  };
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      return hash || (window.location.pathname + window.location.search) || '/';
+      const p = normalize(hash || (window.location.pathname + window.location.search) || '/');
+      if (!hash && p !== window.location.pathname + window.location.search) {
+        try { window.history.replaceState({}, '', p); } catch { /* ignore */ }
+      }
+      return p;
     }
     return '/';
   });
@@ -105,7 +115,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const handlePopState = () => {
       const hash = window.location.hash.replace('#', '');
-      setCurrentPath(hash || (window.location.pathname + window.location.search) || '/');
+      setCurrentPath(normalize(hash || (window.location.pathname + window.location.search) || '/'));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);

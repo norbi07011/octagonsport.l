@@ -1,7 +1,7 @@
 import { CategorySpotlight } from '../components/showcase/CategorySpotlight';
 import { spotlightForCategory } from '../data/spotlights';
 import { KidsGearUp } from '../components/showcase/KidsGearUp';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, getLocalizedProduct, productInCategory, getSubcategoriesFor } from '../data/products';
 import { ProductGrid } from '../components/commerce/ProductGrid';
@@ -152,6 +152,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
   };
 
   const headerInfo = categoryTitles[isNewPage ? 'nieuw' : inferredCategory]?.[language] || categoryTitles.all[language] || categoryTitles.all.nl;
+
+  useEffect(() => {
+    document.title = `${headerInfo.title} | OctagonSportNL`;
+  }, [headerInfo.title]);
 
   const resetFilters = () => {
     setSelectedSport('all');
