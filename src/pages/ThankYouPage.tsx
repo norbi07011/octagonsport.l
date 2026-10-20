@@ -3,6 +3,7 @@ import { CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PENDING_PAYMENT_KEY } from './CheckoutPage';
 import { openWhatsApp } from '../components/layout/WhatsAppWidget';
+import { VictoryScene } from '../components/fx/VictoryScene';
 
 type State = 'loading' | 'paid' | 'pending' | 'failed' | 'unknown';
 
@@ -18,8 +19,15 @@ export const ThankYouPage: React.FC = () => {
     try {
       pending = JSON.parse(sessionStorage.getItem(PENDING_PAYMENT_KEY) || '{}');
     } catch {}
-    const urlOrder = new URLSearchParams(currentPath.split('?')[1] || '').get('order') || '';
+    const params = new URLSearchParams(currentPath.split('?')[1] || '');
+    const urlOrder = params.get('order') || '';
     setOrder(pending.order || urlOrder);
+    // podgląd animacji bez płacenia: /bedankt?preview=1 (nic nie zmienia, nie czyści koszyka)
+    if (params.get('preview') === '1') {
+      if (!pending.order && !urlOrder) setOrder('OCT-PREVIEW');
+      setState('paid');
+      return;
+    }
     if (!pending.id) {
       setState('unknown');
       return;
@@ -52,11 +60,11 @@ export const ThankYouPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const box = (icon: React.ReactNode, title: string, text: string, extra?: React.ReactNode) => (
-    <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
-      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center">{icon}</div>
-      <h1 className="font-bebas text-5xl tracking-wide">{title}</h1>
-      {order && <p className="mt-2 font-mono text-sm text-neutral-400">{tr('Bestelnummer', 'Order number', 'Numer zamówienia')}: <span className="text-white">{order}</span></p>}
+  const box = (icon: React.ReactNode, title: string, text: string, extra?: React.ReactNode, bare?: boolean) => (
+    <div className={`mx-auto max-w-xl px-4 text-center ${bare ? 'py-10 sm:py-12' : 'py-16 sm:py-24'}`}>
+      {!bare && <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center">{icon}</div>}
+      {!bare && <h1 className="font-bebas text-5xl tracking-wide">{title}</h1>}
+      {order && !bare && <p className="mt-2 font-mono text-sm text-neutral-400">{tr('Bestelnummer', 'Order number', 'Numer zamówienia')}: <span className="text-white">{order}</span></p>}
       <p className="mt-4 text-sm leading-relaxed text-neutral-300">{text}</p>
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
         {extra}
@@ -70,6 +78,15 @@ export const ThankYouPage: React.FC = () => {
   return (
     <div className="min-h-[60vh] bg-[#050505] text-white">
       {state === 'loading' && box(<Loader2 className="h-12 w-12 animate-spin text-neutral-400" />, tr('Betaling controleren…', 'Checking payment…', 'Sprawdzamy płatność…'), '')}
+      {state === 'paid' && (
+        <VictoryScene
+          eyebrow={tr('Betaling gelukt · Round 1', 'Payment successful · Round 1', 'Płatność udana · Runda 1')}
+          title={tr('Bedankt, kampioen!', 'Thanks, champ!', 'Dzięki, mistrzu!')}
+          order={order}
+          passLabel={tr('Octagon fight pass · bestelling', 'Octagon fight pass · order', 'Octagon fight pass · zamówienie')}
+          dateLabel={tr('Betaald', 'Paid', 'Opłacone')}
+        />
+      )}
       {state === 'paid' &&
         box(
           <CheckCircle2 className="h-16 w-16 text-emerald-400" />,
@@ -78,7 +95,9 @@ export const ThankYouPage: React.FC = () => {
             'Je betaling is gelukt. Je ontvangt een bevestiging per e-mail. We verzenden je bestelling binnen 7–10 werkdagen en sturen je een Track & Trace-code zodra het pakket onderweg is.',
             'Your payment was successful. You will receive a confirmation by e-mail. Your order will be delivered within 7–10 business days; we will send you a tracking code once it ships.',
             'Płatność się powiodła. Potwierdzenie otrzymasz mailem. Zamówienie dostarczymy w ciągu 7–10 dni roboczych, a po nadaniu paczki wyślemy numer śledzenia.'
-          )
+          ),
+          undefined,
+          true
         )}
       {state === 'pending' &&
         box(
