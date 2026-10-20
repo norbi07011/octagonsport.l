@@ -4,6 +4,7 @@ import { PRODUCTS } from '../src/data/products';
 import { calcShipping } from '../src/config/shipping';
 import { CartItem } from '../src/types';
 import { env, json, Lang, mollie, money, readBody, round2, siteUrl, vatOf } from './shared';
+import { packItems } from './orderItems';
 
 const LOCALE: Record<Lang, string> = { nl: 'nl_NL', en: 'en_NL', pl: 'pl_PL' };
 
@@ -150,6 +151,8 @@ export default async function handler(req: any, res: any) {
       order,
       delivery,
       lang,
+      // skrót koszyka (produkt|rozmiar|kolor|ilość) – panel /beheer i maile pokazują z niego zdjęcia i rozmiary
+      i: packItems(cart.map(c => ({ id: c.product.id, size: c.selectedSize, color: c.selectedColor, qty: c.quantity }))),
       kvk: customer.kvk || undefined,
       vat: customer.vat || undefined,
       notes: customer.notes ? customer.notes.slice(0, 200) : undefined,

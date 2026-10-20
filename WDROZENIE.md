@@ -70,6 +70,23 @@ Od teraz **każda zmiana wrzucona do GitHub automatycznie aktualizuje sklep**.
    - `SHOP_EMAIL` = adres na powiadomienia o zamówieniach
 3. *Trigger deploy*.
 
+## Krok 7 – Panel zamówień na telefonie (/beheer)
+
+Zamówienia ze zdjęciami produktów, rozmiarami i adresem – jak w aplikacji Shopify.
+
+1. Netlify → *Project configuration → Environment variables → Add a variable*:
+   - `ADMIN_PASSWORD` = własne, długie hasło (min. 8 znaków, najlepiej 12+). Zaznacz *Contains secret values*.
+2. *Deploys → Trigger deploy*.
+3. W telefonie otwórz `https://<twoja-domena>/beheer`, wpisz hasło, zaznacz „Zapamiętaj”.
+4. W przeglądarce telefonu: *Udostępnij / menu ⋮ → Dodaj do ekranu głównego* – panel otwiera się jak aplikacja.
+
+W panelu: lista „Do wysłania / Wysłane / Wszystkie”, szczegóły z dużymi zdjęciami, kopiowanie adresu,
+telefon i WhatsApp do klienta, „Oznacz jako wysłane” z numerem Track & Trace (klient dostaje maila, jeśli działa Resend).
+Status wysyłki zapisuje się w Mollie (metadane płatności) – nie trzeba bazy danych.
+
+Powiadomienia o nowym zamówieniu ze zdjęciami przychodzą mailem na `SHOP_EMAIL` (wymaga Resend – Krok 6).
+Włącz powiadomienia z aplikacji pocztowej w telefonie, a mail z listą produktów i zdjęciami pojawi się od razu.
+
 ---
 
 ## Zmiana cen

@@ -7,6 +7,7 @@
 //   RESEND_API_KEY   re_... – maile z potwierdzeniem                         – opcjonalne
 //   MAIL_FROM        np. "OctagonSportNL <shop@octagonsport.nl>"             – opcjonalne
 //   SHOP_EMAIL       adres, na który przychodzą powiadomienia o zamówieniach – opcjonalne
+//   ADMIN_PASSWORD   hasło do panelu zamówień /beheer (min. 8 znaków)              – zalecane
 // =====================================================================
 import { COMPANY } from '../src/config/company';
 

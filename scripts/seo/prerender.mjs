@@ -132,6 +132,6 @@ fs.writeFileSync(
     urls.map(u => `  <url><loc>${esc(SITE + u)}</loc><lastmod>${today}</lastmod></url>`).join('\n') +
     `\n</urlset>\n`
 );
-fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /checkout\nDisallow: /bedankt\n\nSitemap: ${SITE}/sitemap.xml\n`);
+fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /checkout\nDisallow: /bedankt\nDisallow: /beheer\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
 console.log(`[seo] ${PAGES.length} pagina's + ${count} producten + sitemap (${urls.length} URL's) → ${SITE}`);

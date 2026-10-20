@@ -2,7 +2,10 @@
 // Status zawsze pobieramy z API Mollie (fałszywe wywołania nic nie zrobią).
 // Po opłaceniu: mail z potwierdzeniem do klienta + powiadomienie do sklepu (jeśli ustawiono Resend).
 import { COMPANY, COMPANY_ADDRESS_LINE } from '../src/config/company';
-import { env, escapeHtml as e, Lang, mollie, readBody, sendMail } from './shared';
+import { env, escapeHtml as e, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
+import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
+
+const eur = (v: unknown) => Number(v || 0).toFixed(2).replace('.', ',');
 
 const T = {
   subject: { nl: 'Bedankt voor je bestelling', en: 'Thank you for your order', pl: 'Dziękujemy za zamówienie' },
@@ -22,22 +25,8 @@ const T = {
   },
 };
 
-const lineRows = (lines: any[] = []) =>
-  lines
-    .map(
-      l => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${l.quantity}× ${e(l.description)}</td><td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">€${e(l.totalAmount?.value)}</td></tr>`
-    )
-    .join('');
-
 const addressBlock = (a: any) =>
   a ? `${a.organizationName ? e(a.organizationName) + '<br>' : ''}${e(a.givenName)} ${e(a.familyName)}<br>${e(a.streetAndNumber)}<br>${e(a.postalCode)} ${e(a.city)}` : '';
-
-const layout = (inner: string) => `<!doctype html><html><body style="margin:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111">
-<div style="max-width:560px;margin:0 auto;background:#fff">
-<div style="background:#050505;color:#fff;padding:18px 24px;font-size:20px;letter-spacing:2px;font-weight:bold">OCTAGON <span style="color:#D71920;font-size:12px">SPORT NL</span></div>
-<div style="padding:24px;font-size:14px;line-height:1.6">${inner}</div>
-<div style="padding:16px 24px;background:#fafafa;color:#777;font-size:11px;line-height:1.5">${e(COMPANY.name)} · ${e(COMPANY_ADDRESS_LINE)} · KvK ${e(COMPANY.kvk)} · BTW ${e(COMPANY.btw)}<br>${e(COMPANY.email)} · ${e(COMPANY.phone)} · ${e(COMPANY.website)}</div>
-</div></body></html>`;
 
 export default async function handler(req: any, res: any) {
   // Zawsze 200 – Mollie inaczej ponawia wywołanie.
@@ -61,15 +50,19 @@ export default async function handler(req: any, res: any) {
       const addr = p.shippingAddress || p.billingAddress;
       const email = addr?.email || p.billingEmail;
       const order = meta.order || p.id;
+      const site = siteUrl(req);
+      const items = linesToItems(p.lines, meta.i, site);
+      const shipFee = (p.lines || []).filter((l: any) => l.type === 'shipping_fee').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0);
+      const shipRow = shipFee ? `<tr><td></td><td style="padding:8px 0;color:#555">Verzending</td><td style="padding:8px 0;text-align:right;color:#555">€${eur(shipFee)}</td></tr>` : '';
 
       if (email) {
         await sendMail(
           email,
           `${T.subject[lang]} – ${order}`,
-          layout(`<p>${T.hi[lang]} ${e(addr?.givenName || '')},</p><p>${T.intro[lang]}</p>
+          emailLayout(`<p>${T.hi[lang]} ${e(addr?.givenName || '')},</p><p>${T.intro[lang]}</p>
 <p><strong>${T.order[lang]}:</strong> ${e(order)}</p>
-<table style="width:100%;border-collapse:collapse;font-size:14px">${lineRows(p.lines)}
-<tr><td style="padding:10px 0;font-weight:bold">${T.total[lang]}</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${e(p.amount?.value)}</td></tr></table>
+<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${shipRow}
+<tr><td></td><td style="padding:10px 0;font-weight:bold">${T.total[lang]}</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${eur(p.amount?.value)}</td></tr></table>
 <p><strong>${T.ship[lang]}:</strong><br>${addressBlock(addr)}</p><p>${T.returns[lang]}</p>`)
         );
       }
@@ -77,15 +70,15 @@ export default async function handler(req: any, res: any) {
       const shopEmail = env('SHOP_EMAIL') || COMPANY.email;
       await sendMail(
         shopEmail,
-        `Nieuwe bestelling ${order} – €${p.amount?.value}`,
-        layout(`<p><strong>Nieuwe betaalde bestelling</strong> (${e(p.method || '')})</p>
-<p><strong>Bestelnummer:</strong> ${e(order)}<br><strong>Mollie:</strong> ${e(p.id)}<br><strong>Bezorging:</strong> ${meta.delivery === 'pickup' ? 'PostNL-punt' : 'Thuisbezorging'}</p>
-<table style="width:100%;border-collapse:collapse;font-size:14px">${lineRows(p.lines)}
-<tr><td style="padding:10px 0;font-weight:bold">Totaal</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${e(p.amount?.value)}</td></tr></table>
-<p><strong>Klant:</strong><br>${addressBlock(addr)}<br>${e(addr?.email || '')}<br>${e(addr?.phone || '')}</p>
-${meta.kvk || meta.vat ? `<p><strong>Zakelijk:</strong> KvK ${e(meta.kvk || '-')} · BTW ${e(meta.vat || '-')}</p>` : ''}
-${meta.notes ? `<p><strong>Opmerking:</strong> ${e(meta.notes)}</p>` : ''}
-<p>Alle details staan in het Mollie-dashboard.</p>`),
+        `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)} – ${items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`).join(', ').slice(0, 120)}`,
+        emailLayout(`<p><strong>Nowe opłacone zamówienie</strong> (${e(p.method || '')}${p.mode === 'test' ? ' · TEST' : ''})</p>
+<p><strong>Numer zamówienia:</strong> ${e(order)}<br><strong>Mollie:</strong> ${e(p.id)}<br><strong>Dostawa:</strong> ${meta.delivery === 'pickup' ? 'punkt PostNL' : 'do domu'}</p>
+<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${shipRow}
+<tr><td></td><td style="padding:10px 0;font-weight:bold">Razem</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${eur(p.amount?.value)}</td></tr></table>
+<p><strong>Klient:</strong><br>${addressBlock(addr)}<br>${e(addr?.email || '')}<br>${e(addr?.phone || '')}</p>
+${meta.kvk || meta.vat ? `<p><strong>Firma:</strong> KvK ${e(meta.kvk || '-')} · BTW ${e(meta.vat || '-')}</p>` : ''}
+${meta.notes ? `<p><strong>Uwagi klienta:</strong> ${e(meta.notes)}</p>` : ''}
+<p style="margin-top:20px"><a href="${site}/beheer#${e(p.id)}" style="display:inline-block;background:#D71920;color:#fff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:6px">Otwórz zamówienie w panelu →</a></p>`),
         email
       );
     }

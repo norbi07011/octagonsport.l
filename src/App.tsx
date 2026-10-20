@@ -20,6 +20,7 @@ import { ClubsPage } from './pages/ClubsPage';
 import { WholesalePage } from './pages/WholesalePage';
 import { CustomTeamwearPage } from './pages/CustomTeamwearPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { ThankYouPage } from './pages/ThankYouPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { AboutPage } from './pages/AboutPage';
@@ -137,6 +138,9 @@ const AppContent: React.FC = () => {
     // Default fallback to home
     return <HomePage />;
   };
+
+  // prywatny panel zamówień – bez nagłówka, stopki i intra sklepu
+  if (currentPath.split('?')[0].replace(/\/+$/, '') === '/beheer') return <AdminOrdersPage />;
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#FFFFFF] flex flex-col font-body selection:bg-[#D71920] selection:text-white">
