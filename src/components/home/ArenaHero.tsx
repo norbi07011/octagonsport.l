@@ -204,14 +204,18 @@ export const ArenaHero: React.FC = () => {
         </div>
 
         {/* SCENA: klatka + orbita produktów */}
-        <div className="relative w-full flex-1" style={{ minHeight: stageH, perspective: mobile ? 900 : 1400 }}>
-          <div className="absolute left-1/2 top-[56%] h-0 w-0" style={{ transformStyle: 'preserve-3d' }}>
+        <div className="relative w-full flex-1" style={{ minHeight: stageH }}>
+          {/* Warstwy są płaskie względem siebie (bez wspólnego 3D), żeby mata nie „przecinała” zdjęć produktów:
+              klatka ma własną perspektywę, a produkty układają się tylko przed nią (z-index 30) albo za nią (5). */}
+          <div className="absolute left-1/2 top-[56%] h-0 w-0" style={{ isolation: 'isolate' }}>
             {/* cień pod klatką */}
             <div aria-hidden className="absolute rounded-[50%] bg-black/80 blur-2xl" style={{ width: a * 3.2, height: a * 1.1, left: -a * 1.6, top: a * 0.15 }} />
+            <div className="absolute left-0 top-0 h-0 w-0" style={{ zIndex: 10, perspective: mobile ? 900 : 1400 }}>
             <div ref={camera} style={{ transformStyle: 'preserve-3d', transform: 'rotateX(62deg)' }}>
               <div ref={spin} style={{ transformStyle: 'preserve-3d' }}>
                 <OctagonCage apothem={a} wallH={wallH} play={play} delay={150} />
               </div>
+            </div>
             </div>
             {/* orbita produktów */}
             {items.map((it, i) => (
