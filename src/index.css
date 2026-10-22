@@ -301,3 +301,10 @@
   .oct-cage-spin, .oct-floor-in, .oct-draw, .oct-wall-rise, .oct-logo-ignite, .oct-punch-l, .oct-punch-r,
   .oct-recoil-l, .oct-recoil-r, .oct-shock, .oct-flash, .oct-shake, .oct-ticket, .oct-ticket-shine { animation: none; }
 }
+
+/* Hero „Arena” – reflektory omiatające scenę */
+@keyframes oct-spot-l { 0%, 100% { transform: translateX(-50%) rotate(16deg); } 50% { transform: translateX(-50%) rotate(4deg); } }
+@keyframes oct-spot-r { 0%, 100% { transform: translateX(-50%) rotate(-16deg); } 50% { transform: translateX(-50%) rotate(-3deg); } }
+.oct-spot-l { animation: oct-spot-l 9s ease-in-out infinite; }
+.oct-spot-r { animation: oct-spot-r 11s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .oct-spot-l, .oct-spot-r { animation: none; transform: translateX(-50%); } }

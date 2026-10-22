@@ -26,6 +26,8 @@ export const IntroOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
     doneRef.current = true;
     try { sessionStorage.setItem(KEY, '1'); } catch { /* prywatny tryb */ }
     setPhase('reveal');
+    // hero „Arena” startuje razem z odsłonięciem strony (logo z intra „spada” na matę)
+    try { window.dispatchEvent(new Event('oct:intro-reveal')); } catch {}
     window.setTimeout(onDone, 900);
   };
 

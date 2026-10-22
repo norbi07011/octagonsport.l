@@ -35,6 +35,10 @@
     <form name="partner" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input name="bot-field" /><input name="type" /><input name="name" /><input name="organisation" /><input name="email" /><input name="phone" /><input name="city" /><input name="social" /><textarea name="message"></textarea><input name="language" />
     </form>
+    <!-- Netlify Forms: deklaracja formularza newslettera (wysyłany z aplikacji React) -->
+    <form name="newsletter" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="email" name="email" /><input name="source" /><input name="lang" /><input name="bot-field" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

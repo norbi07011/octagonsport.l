@@ -1,3 +1,4 @@
+import { subscribeNewsletter, NEWSLETTER_ERROR } from '../../lib/newsletter';
 import React, { useEffect, useRef, useState } from 'react';
 import { VelocityMarquee } from '../fx/ScrollFx';
 import { PARTNERS, INFLUENCERS } from '../../data/partners';
@@ -61,9 +62,14 @@ export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false);
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) return;
+    if (!email || !email.includes('@') || sending) return;
+    setSending(true);
+    const ok = await subscribeNewsletter(email, 'footer', language);
+    setSending(false);
+    if (!ok) { showToast(NEWSLETTER_ERROR[language] || NEWSLETTER_ERROR.nl); return; }
     setSubscribed(true);
     showToast(t('newsletter.success'));
     setEmail('');
@@ -156,7 +162,8 @@ export const Footer: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="bg-[#D71920] hover:bg-[#b01318] text-white px-4 py-2 text-xs font-condensed font-bold uppercase tracking-wider shrink-0 transition-colors cursor-pointer"
+                  disabled={sending}
+                  className="bg-[#D71920] hover:bg-[#b01318] disabled:opacity-60 text-white px-4 py-2 text-xs font-condensed font-bold uppercase tracking-wider shrink-0 transition-colors cursor-pointer"
                 >
                   {t('newsletter.button')}
                 </button>
