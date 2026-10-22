@@ -84,7 +84,6 @@ const PAGES = [
   ['/category/training', 'Training – stootkussens, bokszakken & medicijnballen', 'Trainingsmateriaal van Legion Octagon: focus mitts, Thai pads, bokszakken en medicijnballen van echt leer.', firstImageOf('training')],
   ['/category/accessoires', 'Accessoires – tassen, petten, shakers & meer', 'Octagon accessoires: sporttassen en rugzakken, petten, bivakmutsen, handdoeken en shakers.', firstImageOf('accessoires')],
   ['/nieuw', 'Nieuw binnen', 'De nieuwste Octagon drops: T-shirts 2026, rashguards, shorts, sweaters en fight gear.', firstImageOf('heren')],
-  ['/sale', 'Sale', 'Octagon fightwear en uitrusting in de aanbieding.', firstImageOf('heren')],
   ['/partners', 'Partners & samenwerkingen', 'De sportscholen, clubs, vechters en creators waarmee OctagonSportNL samenwerkt.', '/images/partners/marris-gym-groep.webp'],
   ['/over-ons', 'Over ons – Octagon in Nederland', 'OctagonSportNL brengt de fightwear en vechtsportuitrusting van het Poolse merk Octagon naar Nederland.', '/images/arena-marris-gym-octagon.webp'],
   ['/clubs', 'Voor clubs & teams', 'Aanbod voor sportscholen, clubs en teams: Octagon gear en kleding op aanvraag.', '/images/arena-marris-gym-octagon.webp'],

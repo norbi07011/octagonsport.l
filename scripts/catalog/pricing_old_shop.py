@@ -169,6 +169,12 @@ def main():
                 else:
                     p.pop('compareAtEur', None)
 
+    # ręczne ceny i decyzje właściciela (zawsze na końcu)
+    import importlib.util as _u
+    _spec = _u.spec_from_file_location('manual_overrides', Path(__file__).with_name('manual_overrides.py'))
+    _m = _u.module_from_spec(_spec); _spec.loader.exec_module(_m)
+    print('ręczne ceny / ukryte:', _m.apply(cat))
+
     json.dump(cat, open(CAT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     with open(REPORT, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f, delimiter=';')

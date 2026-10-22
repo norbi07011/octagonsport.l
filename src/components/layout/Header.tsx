@@ -66,7 +66,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
     { label: t('nav.training'), path: '/category/training', mega: 'training' },
     { label: t('nav.accessories'), path: '/category/accessoires', mega: 'accessoires' },
     { label: t('nav.new'), path: '/nieuw', highlight: true },
-    { label: t('nav.sale'), path: '/sale', isSale: true },
     { label: t('nav.partners'), path: '/partners' },
   ];
 
@@ -121,9 +120,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
                 <button
                   onClick={() => handleNavClick(item.path)}
                   className={`px-3 py-2 text-xs xl:text-sm font-condensed font-bold tracking-wider uppercase transition-colors whitespace-nowrap flex items-center gap-1 ${
-                    item.isSale
-                      ? 'text-[#D71920] hover:text-white'
-                      : item.highlight
+                    item.highlight
                       ? 'text-white hover:text-[#D71920]'
                       : isActive
                       ? 'text-white border-b-2 border-[#D71920]'
@@ -131,11 +128,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
                   }`}
                 >
                   {item.label}
-                  {item.isSale && (
-                    <span className="bg-[#D71920] text-white text-[9px] px-1 py-0.2 rounded font-mono">
-                      %
-                    </span>
-                  )}
                   {item.mega && (
                     <ChevronDown className="w-3 h-3 text-neutral-500 group-hover:text-white transition-transform" />
                   )}

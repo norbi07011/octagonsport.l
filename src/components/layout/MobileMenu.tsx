@@ -133,17 +133,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             );
           })}
 
-          {/* SALE */}
-          <div className="border-b border-neutral-800/60 pb-1">
-            <button
-              onClick={() => handleNavigate('/sale')}
-              className="w-full py-3 flex items-center justify-between font-bebas text-xl tracking-wider text-[#D71920] text-left"
-            >
-              <span>{t('nav.sale')}</span>
-              <ChevronRight className="w-4 h-4 text-[#D71920]" />
-            </button>
-          </div>
-
           {/* PARTNERS */}
           <div className="border-b border-neutral-800/60 pb-1">
             <button

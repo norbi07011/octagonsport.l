@@ -15,7 +15,6 @@ import { PredictiveSearchModal } from './components/commerce/PredictiveSearchMod
 import { HomePage } from './pages/HomePage';
 import { CategoryPage } from './pages/CategoryPage';
 import { ProductPage } from './pages/ProductPage';
-import { SalePage } from './pages/SalePage';
 import { ClubsPage } from './pages/ClubsPage';
 import { WholesalePage } from './pages/WholesalePage';
 import { CustomTeamwearPage } from './pages/CustomTeamwearPage';
@@ -79,10 +78,6 @@ const AppContent: React.FC = () => {
 
     if (cleanPath.startsWith('/category/') || cleanPath === '/nieuw') {
       return <CategoryPage />;
-    }
-
-    if (cleanPath === '/sale') {
-      return <SalePage />;
     }
 
     if (cleanPath === '/partners' || cleanPath === '/samenwerkingen' || cleanPath === '/partnerzy') {

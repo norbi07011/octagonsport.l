@@ -223,11 +223,6 @@ export const Footer: React.FC = () => {
                 {t('sub.shinGuards')}
               </button>
             </li>
-            <li>
-              <button onClick={() => navigate('/sale')} className="text-[#D71920] font-semibold hover:underline text-left cursor-pointer">
-                {t('nav.sale')}
-              </button>
-            </li>
           </ul>
         </div>
 
