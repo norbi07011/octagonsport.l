@@ -10,7 +10,9 @@ Ustalenia (22.10.2026):
   - bluzy Z KAPTUREM (met capuchon): 64,99
   - bandaże (boks + żelowe): 19,99
   - damskie T-shirty Octagon OCT. (zwart / wit): 29,99
-  - dziecięce sportshirty: 29,99
+  - wszystkie koszulki dziecięce (T-shirty i sportshirty kids): 29,99
+  - dresy (joggingbroeken): 54,99
+  - bluzy BEZ kaptura (sweatery, zip bez kaptura, Utah): 59,99
   - rękawice MMA Gold Edition 1.0 złote: 49,99
   - koniec wyprzedaży: strona Sale usunięta; produkty z wyprzedaży, którym nie nadano ceny powyżej,
     są ukryte (published = False) – da się je przywrócić, usuwając je z HIDE_SALE lub wyłączając tę regułę.
@@ -50,12 +52,14 @@ def rule_price(p):
         return 39.99
     if sub == 'tanktops':
         return 29.99
-    if sub == 'hoodies' and 'met-capuchon' in slug:
-        return 64.99
+    if sub == 'hoodies':
+        return 64.99 if 'met-capuchon' in slug else 59.99
+    if sub == 'broeken' and slug.startswith('joggingbroek'):
+        return 54.99
+    if cat == 'kids' and sub in ('t-shirts', 'sportshirts'):
+        return 29.99
     if sub == 'bandages':
         return 19.99
-    if cat == 'kids' and sub == 'sportshirts':
-        return 29.99
     return None
 
 
@@ -71,6 +75,10 @@ def apply(cat):
             p['priceEur'] = price
             p.pop('compareAtEur', None)
             p['isSale'] = False
+            # produkt ukryty wcześniej jako wyprzedaż, a teraz z ręczną ceną – wraca do sklepu
+            if p.get('hiddenReason') == 'sale-ended-2026-10':
+                p['published'] = True
+                p.pop('hiddenReason', None)
             priced += 1
         elif HIDE_SALE and (p.get('isSale') or p.get('compareAtEur')) and p.get('published'):
             p['published'] = False
