@@ -44,6 +44,8 @@ const toOrder = (p: any, site: string) => {
     amount: Number(p.amount?.value || 0),
     refunded: Number(p.amountRefunded?.value || 0),
     shippingFee: shipping,
+    discount: Math.abs((p.lines || []).filter((l: any) => l.type === 'discount').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0)) || Number(meta.disc || 0),
+    code: meta.code || '',
     delivery: meta.delivery === 'pickup' ? 'pickup' : 'home',
     notes: meta.notes || '',
     kvk: meta.kvk || '',

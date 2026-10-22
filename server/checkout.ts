@@ -5,6 +5,7 @@ import { calcShipping } from '../src/config/shipping';
 import { CartItem } from '../src/types';
 import { env, json, Lang, mollie, money, readBody, round2, siteUrl, vatOf } from './shared';
 import { packItems } from './orderItems';
+import { checkDiscount, normalizeCode } from './discounts';
 
 const LOCALE: Record<Lang, string> = { nl: 'nl_NL', en: 'en_NL', pl: 'pl_PL' };
 
@@ -16,6 +17,9 @@ const MSG = {
   terms: { nl: 'Ga akkoord met de algemene voorwaarden.', en: 'Please accept the terms.', pl: 'Zaakceptuj regulamin.' },
   config: { nl: 'Online betalen is nog niet geactiveerd. Probeer het later opnieuw of neem contact op.', en: 'Online payment is not active yet. Please try again later or contact us.', pl: 'Płatności online nie są jeszcze aktywne. Spróbuj później lub skontaktuj się z nami.' },
   mollie: { nl: 'Betaling kon niet worden gestart. Probeer het opnieuw.', en: 'Payment could not be started. Please try again.', pl: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.' },
+  codeUnknown: { nl: 'Deze kortingscode bestaat niet of is verlopen. Verwijder de code en probeer opnieuw.', en: 'This discount code does not exist or has expired. Remove the code and try again.', pl: 'Ten kod rabatowy nie istnieje lub wygasł. Usuń kod i spróbuj ponownie.' },
+  codeMin: { nl: 'Je kortingscode geldt pas vanaf een hoger bedrag aan producten.', en: 'Your discount code requires a higher product total.', pl: 'Twój kod rabatowy działa dopiero od wyższej kwoty za produkty.' },
+  codeUsed: { nl: 'Deze kortingscode geldt alleen voor je eerste bestelling.', en: 'This discount code is only valid for your first order.', pl: 'Ten kod rabatowy działa tylko przy pierwszym zamówieniu.' },
 };
 
 const str = (v: unknown, max = 100) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -89,10 +93,31 @@ export default async function handler(req: any, res: any) {
   }
 
   const subtotal = round2(cart.reduce((s, i) => s + i.product.price * i.quantity, 0));
+
+  // --- kod rabatowy (liczony tylko tutaj, na serwerze)
+  let discount = 0;
+  let discountCode = '';
+  let discountPercent = 0;
+  if (normalizeCode(body.discountCode)) {
+    let r;
+    try {
+      r = await checkDiscount(body.discountCode, subtotal, customer.email);
+    } catch (e: any) {
+      console.error('Discount check error', e?.status, e?.message);
+      return fail(502, 'mollie');
+    }
+    if (!r.ok) return fail(400, r.reason === 'min' ? 'codeMin' : r.reason === 'used' ? 'codeUsed' : 'codeUnknown', { discountError: r.reason });
+    discount = r.amount;
+    discountCode = r.code;
+    discountPercent = r.percent;
+  }
+  const goods = round2(subtotal - discount);
+
   const delivery = body.deliveryMethod === 'pickup' ? 'pickup' : 'home';
+  // darmowa wysyłka liczona od kwoty za produkty PRZED rabatem (kod nie odbiera darmowej dostawy)
   const quote = calcShipping(cart, subtotal, delivery);
   if (quote.freightItems.length) return fail(400, 'freight');
-  const total = round2(subtotal + quote.fee);
+  const total = round2(goods + quote.fee);
 
   const site = siteUrl(req);
   const order = orderNumber();
@@ -113,6 +138,18 @@ export default async function handler(req: any, res: any) {
       imageUrl: i.product.images[0] ? `${site}${i.product.images[0]}` : undefined,
     };
   });
+  if (discount > 0) {
+    lines.push({
+      type: 'discount',
+      description: `Kortingscode ${discountCode} (-${discountPercent}%)`,
+      quantity: 1,
+      unitPrice: money(-discount),
+      totalAmount: money(-discount),
+      vatRate: '21.00',
+      vatAmount: money(-vatOf(discount)),
+      sku: `CODE-${discountCode}`,
+    });
+  }
   if (quote.fee > 0) {
     lines.push({
       type: 'shipping_fee',
@@ -151,6 +188,8 @@ export default async function handler(req: any, res: any) {
       order,
       delivery,
       lang,
+      code: discountCode || undefined,
+      disc: discount ? discount.toFixed(2) : undefined,
       // skrót koszyka (produkt|rozmiar|kolor|ilość) – panel /beheer i maile pokazują z niego zdjęcia i rozmiary
       i: packItems(cart.map(c => ({ id: c.product.id, size: c.selectedSize, color: c.selectedColor, qty: c.quantity }))),
       kvk: customer.kvk || undefined,
@@ -171,7 +210,7 @@ export default async function handler(req: any, res: any) {
         created = await mollie('/payments', { method: 'POST', body: simple });
       } else throw e;
     }
-    return json(res, 200, { checkoutUrl: created?._links?.checkout?.href, paymentId: created?.id, orderNumber: order, total });
+    return json(res, 200, { checkoutUrl: created?._links?.checkout?.href, paymentId: created?.id, orderNumber: order, total, discount, discountCode });
   } catch (e: any) {
     console.error('Mollie error', e.status, e.message);
     return fail(502, 'mollie');

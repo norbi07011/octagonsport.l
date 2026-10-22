@@ -5,6 +5,8 @@ import { getLocalizedProduct } from '../data/products';
 import { calcShipping, formatEur, FREE_SHIPPING_THRESHOLD, TIERS } from '../config/shipping';
 import { openWhatsApp } from '../components/layout/WhatsAppWidget';
 import { RollingNumber } from '../components/fx/Kinetic';
+import { useDiscount } from '../lib/discount';
+import { DiscountBox } from '../components/commerce/DiscountBox';
 
 type L = 'nl' | 'en' | 'pl';
 export const PENDING_PAYMENT_KEY = 'octagon_pending_payment';
@@ -42,10 +44,13 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const cancelled = currentPath.includes('status=geannuleerd');
+  // kod rabatowy (podgląd – ostatecznie liczy serwer); darmowa wysyłka od kwoty PRZED rabatem
+  const disc = useDiscount(subtotal, lang);
+  const goods = Math.round((subtotal - disc.amount) * 100) / 100;
   const quote = calcShipping(cart, subtotal, delivery);
   const homeQuote = calcShipping(cart, subtotal, 'home');
   const pickupQuote = calcShipping(cart, subtotal, 'pickup');
-  const total = Math.round((subtotal + quote.fee) * 100) / 100;
+  const total = Math.round((goods + quote.fee) * 100) / 100;
   const vat = Math.round((total * 21) / 121 * 100) / 100;
 
   const validate = () => {
@@ -84,12 +89,15 @@ export const CheckoutPage: React.FC = () => {
           acceptTerms,
           deliveryMethod: delivery,
           items: cart.map(i => ({ id: i.product.id, quantity: i.quantity, size: i.selectedSize, color: i.selectedColor })),
+          discountCode: disc.amount > 0 ? disc.applied?.code : undefined,
           customer: { ...f, company: business ? f.company : '', kvk: business ? f.kvk : '', vat: business ? f.vat : '' },
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.checkoutUrl) {
         if (Array.isArray(data.fields)) setBad(data.fields);
+        // kod nieważny (np. już użyty przy wcześniejszym zamówieniu) – usuwamy go, klient może zapłacić bez kodu
+        if (data.discountError === 'used' || data.discountError === 'unknown') disc.remove();
         throw new Error(data.error || '');
       }
       try {
@@ -272,8 +280,14 @@ export const CheckoutPage: React.FC = () => {
                 );
               })}
             </ul>
-            <div className="mt-5 space-y-2 border-t border-neutral-800 pt-4 text-sm">
+            <div className="mt-5 border-t border-neutral-800 pt-4">
+              <DiscountBox d={disc} lang={lang} />
+            </div>
+            <div className="mt-4 space-y-2 border-t border-neutral-800 pt-4 text-sm">
               <div className="flex justify-between text-neutral-300"><span>{tr('Subtotaal', 'Subtotal', 'Produkty')}</span><span className="font-mono">{formatEur(subtotal)}</span></div>
+              {disc.amount > 0 && (
+                <div className="flex justify-between text-emerald-400"><span>{tr('Korting', 'Discount', 'Rabat')} {disc.applied?.code} (-{disc.applied?.percent}%)</span><span className="font-mono">-{formatEur(disc.amount)}</span></div>
+              )}
               <div className="flex justify-between text-neutral-300"><span>{tr('Verzendkosten', 'Shipping', 'Wysyłka')}</span><span className="font-mono">{quote.fee === 0 ? <span className="text-emerald-400">GRATIS</span> : formatEur(quote.fee)}</span></div>
               <div className="flex justify-between border-t border-neutral-800 pt-3 text-lg font-bold"><span>{tr('Totaal', 'Total', 'Razem')}</span><span className="font-mono text-[#D71920]"><RollingNumber value={total} format={formatEur} /></span></div>
               <p className="text-right text-[11px] text-neutral-500">{tr('waarvan 21% btw', 'incl. 21% VAT', 'w tym 21% VAT')} {formatEur(vat)}</p>

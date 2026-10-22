@@ -87,6 +87,15 @@ Status wysyłki zapisuje się w Mollie (metadane płatności) – nie trzeba baz
 Powiadomienia o nowym zamówieniu ze zdjęciami przychodzą mailem na `SHOP_EMAIL` (wymaga Resend – Krok 6).
 Włącz powiadomienia z aplikacji pocztowej w telefonie, a mail z listą produktów i zdjęciami pojawi się od razu.
 
+## Kody rabatowe
+
+Lista kodów jest w pliku `server/discounts.ts` (tylko na serwerze – nie widać jej w kodzie strony).
+Każdy kod: procent rabatu, minimalna kwota za produkty, opcjonalnie „tylko pierwsze zamówienie”, włączony/wyłączony.
+Rabat liczy serwer i wysyła do Mollie jako osobną pozycję „Kortingscode …”, więc klient płaci kwotę po rabacie.
+Darmowa wysyłka liczy się od kwoty PRZED rabatem (kod nie odbiera darmowej dostawy).
+Kod widać w panelu /beheer (zielona plakietka) i w mailu o zamówieniu.
+Żeby dodać/wyłączyć kod – napisz do Claude albo zmień listę i wypchnij do GitHub.
+
 ---
 
 ## Zmiana cen

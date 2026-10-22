@@ -29,6 +29,13 @@
   status = 200
   force = true
 
+# Sprawdzanie kodów rabatowych (podgląd w koszyku i kasie)
+[[redirects]]
+  from = "/api/discount"
+  to = "/.netlify/functions/discount"
+  status = 200
+  force = true
+
 # Prywatny panel zamówień (/beheer) – wymaga ADMIN_PASSWORD
 [[redirects]]
   from = "/api/admin-orders"

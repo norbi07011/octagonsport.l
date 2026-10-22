@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext';
 import { PENDING_PAYMENT_KEY } from './CheckoutPage';
 import { openWhatsApp } from '../components/layout/WhatsAppWidget';
 import { VictoryScene } from '../components/fx/VictoryScene';
+import { clearDiscount } from '../lib/discount';
 
 type State = 'loading' | 'paid' | 'pending' | 'failed' | 'unknown';
 
@@ -42,6 +43,7 @@ export const ThankYouPage: React.FC = () => {
         if (d.status === 'paid' || d.status === 'authorized') {
           setState('paid');
           clearCart();
+          clearDiscount();
           try { sessionStorage.removeItem(PENDING_PAYMENT_KEY); } catch {}
           return;
         }

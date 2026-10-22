@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { RollingNumber } from '../components/fx/Kinetic';
+import { useDiscount } from '../lib/discount';
+import { DiscountBox } from '../components/commerce/DiscountBox';
 import { useStore } from '../context/StoreContext';
 import { getLocalizedProduct } from '../data/products';
 import { 
@@ -43,9 +45,7 @@ export const CartPage: React.FC = () => {
     products
   } = useStore();
 
-  const [promoCodeInput, setPromoCodeInput] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
-  const [promoError, setPromoError] = useState('');
+  const disc = useDiscount(subtotal, language);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Recommendations: products not in cart
@@ -56,29 +56,11 @@ export const CartPage: React.FC = () => {
 
   const freeShippingProgress = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
-  const handleApplyPromo = () => {
-    const code = promoCodeInput.trim().toUpperCase();
-    if (!code) return;
-
-    if (code === 'OCTAGON10') {
-      setAppliedPromo({ code, discount: 10 });
-      setPromoError('');
-      showToast(language === 'pl' ? 'Zastosowano kod OCTAGON10 (-€10)' : 'Kortingscode OCTAGON10 toegepast (-€10)');
-    } else if (code === 'FIGHTCLUB') {
-      setAppliedPromo({ code, discount: 15 });
-      setPromoError('');
-      showToast(language === 'pl' ? 'Zastosowano kod FIGHTCLUB (-€15)' : 'Kortingscode FIGHTCLUB toegepast (-€15)');
-    } else if (code === 'PROMO2026') {
-      setAppliedPromo({ code, discount: 5 });
-      setPromoError('');
-      showToast(language === 'pl' ? 'Zastosowano kod PROMO2026 (-€5)' : 'Kortingscode PROMO2026 toegepast (-€5)');
-    } else {
-      setPromoError(language === 'pl' ? 'Nieprawidłowy kod promocyjny' : 'Ongeldige actiecode');
-    }
-  };
-
-  const discountAmount = appliedPromo ? appliedPromo.discount : 0;
-  const finalTotal = Math.max(0, Number((total - discountAmount).toFixed(2)));
+  // rabat z kodu (podgląd – ostatecznie liczy serwer); darmowa wysyłka liczona od kwoty PRZED rabatem
+  const discountAmount = disc.amount;
+  const goods = Math.round((subtotal - discountAmount) * 100) / 100;
+  const shipAfter = shippingFee;
+  const finalTotal = Math.max(0, Number((goods + shipAfter).toFixed(2)));
   const subtotalExclVat = Number((finalTotal / 1.21).toFixed(2));
   const vatAmount = Number((finalTotal - subtotalExclVat).toFixed(2));
 
@@ -404,43 +386,8 @@ export const CartPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Promo Code Input */}
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-neutral-300 mb-1.5 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-[#D71920]" />
-                  <span>{language === 'pl' ? 'Kod Rabatowy / Kupon' : 'Kortingscode of Actiecode'}</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promoCodeInput}
-                    onChange={e => setPromoCodeInput(e.target.value)}
-                    placeholder="OCTAGON10 / FIGHTCLUB"
-                    className="bg-[#141414] border border-neutral-700 px-3 py-2 text-xs text-white flex-1 focus:outline-none focus:border-[#D71920] font-mono uppercase"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleApplyPromo}
-                    className="px-4 py-2 bg-neutral-800 hover:bg-[#D71920] text-white font-condensed font-bold text-xs uppercase cursor-pointer transition-colors"
-                  >
-                    {language === 'pl' ? 'Zastosuj' : 'Toepassen'}
-                  </button>
-                </div>
-                {appliedPromo && (
-                  <div className="mt-2 p-2 bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between text-xs font-mono text-emerald-400">
-                    <span>✓ {appliedPromo.code} (-€{appliedPromo.discount.toFixed(2)})</span>
-                    <button 
-                      onClick={() => setAppliedPromo(null)}
-                      className="text-neutral-400 hover:text-white ml-2 text-[10px] underline"
-                    >
-                      Usuń
-                    </button>
-                  </div>
-                )}
-                {promoError && (
-                  <p className="text-xs text-[#D71920] font-mono mt-1">{promoError}</p>
-                )}
-              </div>
+              {/* Kod rabatowy */}
+              <DiscountBox d={disc} lang={language} />
 
               {/* Price Calculation Lines */}
               <div className="border-t border-neutral-800 pt-4 space-y-2.5 text-xs font-mono text-neutral-300">
@@ -451,16 +398,16 @@ export const CartPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span>{language === 'pl' ? 'Dostawa' : language === 'en' ? 'Shipping' : 'Verzendkosten'} (≈ {shippingQuote.totalKg.toFixed(1).replace('.', ',')} kg):</span>
                   <span className="tabular-nums">
-                    {shippingFee === 0 ? (
+                    {shipAfter === 0 ? (
                       <span className="text-emerald-400 font-bold">GRATIS</span>
                     ) : (
-                      `€${shippingFee.toFixed(2)}`
+                      `€${shipAfter.toFixed(2)}`
                     )}
                   </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-400">
-                    <span>{language === 'pl' ? 'Rabat kuponu:' : 'Korting:'}</span>
+                    <span>{language === 'pl' ? 'Kod rabatowy' : language === 'en' ? 'Discount' : 'Korting'} {disc.applied?.code}:</span>
                     <span className="tabular-nums font-bold">-€{discountAmount.toFixed(2)}</span>
                   </div>
                 )}

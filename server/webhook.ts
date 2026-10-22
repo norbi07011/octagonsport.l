@@ -54,6 +54,8 @@ export default async function handler(req: any, res: any) {
       const items = linesToItems(p.lines, meta.i, site);
       const shipFee = (p.lines || []).filter((l: any) => l.type === 'shipping_fee').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0);
       const shipRow = shipFee ? `<tr><td></td><td style="padding:8px 0;color:#555">Verzending</td><td style="padding:8px 0;text-align:right;color:#555">€${eur(shipFee)}</td></tr>` : '';
+      const disc = Math.abs((p.lines || []).filter((l: any) => l.type === 'discount').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0)) || Number(meta.disc || 0);
+      const discRow = disc ? `<tr><td></td><td style="padding:8px 0;color:#0a7d3b">Kortingscode ${e(meta.code || '')}</td><td style="padding:8px 0;text-align:right;color:#0a7d3b">-€${eur(disc)}</td></tr>` : '';
 
       if (email) {
         await sendMail(
@@ -61,7 +63,7 @@ export default async function handler(req: any, res: any) {
           `${T.subject[lang]} – ${order}`,
           emailLayout(`<p>${T.hi[lang]} ${e(addr?.givenName || '')},</p><p>${T.intro[lang]}</p>
 <p><strong>${T.order[lang]}:</strong> ${e(order)}</p>
-<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${shipRow}
+<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${discRow}${shipRow}
 <tr><td></td><td style="padding:10px 0;font-weight:bold">${T.total[lang]}</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${eur(p.amount?.value)}</td></tr></table>
 <p><strong>${T.ship[lang]}:</strong><br>${addressBlock(addr)}</p><p>${T.returns[lang]}</p>`)
         );
@@ -70,10 +72,10 @@ export default async function handler(req: any, res: any) {
       const shopEmail = env('SHOP_EMAIL') || COMPANY.email;
       await sendMail(
         shopEmail,
-        `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)} – ${items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`).join(', ').slice(0, 120)}`,
+        `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)}${meta.code ? ` [kod ${meta.code}]` : ''} – ${items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`).join(', ').slice(0, 120)}`,
         emailLayout(`<p><strong>Nowe opłacone zamówienie</strong> (${e(p.method || '')}${p.mode === 'test' ? ' · TEST' : ''})</p>
 <p><strong>Numer zamówienia:</strong> ${e(order)}<br><strong>Mollie:</strong> ${e(p.id)}<br><strong>Dostawa:</strong> ${meta.delivery === 'pickup' ? 'punkt PostNL' : 'do domu'}</p>
-<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${shipRow}
+<table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${discRow}${shipRow}
 <tr><td></td><td style="padding:10px 0;font-weight:bold">Razem</td><td style="padding:10px 0;text-align:right;font-weight:bold">€${eur(p.amount?.value)}</td></tr></table>
 <p><strong>Klient:</strong><br>${addressBlock(addr)}<br>${e(addr?.email || '')}<br>${e(addr?.phone || '')}</p>
 ${meta.kvk || meta.vat ? `<p><strong>Firma:</strong> KvK ${e(meta.kvk || '-')} · BTW ${e(meta.vat || '-')}</p>` : ''}
