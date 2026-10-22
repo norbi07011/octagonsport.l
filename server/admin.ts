@@ -7,6 +7,7 @@
 import { PRODUCTS } from '../src/data/products';
 import { env, escapeHtml as e, json, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
 import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
+import { DISCOUNT_CODES } from './discounts';
 
 /** Porównanie haseł odporne na pomiar czasu. */
 const safeEqual = (a: string, b: string) => {
@@ -80,9 +81,18 @@ export default async function handler(req: any, res: any) {
 
   try {
     if (req.method === 'GET') {
-      const data = await mollie('/payments?limit=100');
-      const list = (data?._embedded?.payments || []).map((p: any) => toOrder(p, site));
-      return json(res, 200, { orders: list, products: PRODUCTS.length });
+      // ostatnie płatności (do 1000) – potrzebne też do zestawienia kodów rabatowych
+      const all: any[] = [];
+      let path: string | null = '/payments?limit=250';
+      for (let page = 0; path && page < 4; page++) {
+        const data: any = await mollie(path);
+        all.push(...(data?._embedded?.payments || []));
+        const next: string | undefined = data?._links?.next?.href;
+        path = next ? next.replace(/^https:\/\/api\.mollie\.com\/v2/, '') : null;
+      }
+      const list = all.map((p: any) => toOrder(p, site));
+      const codes = DISCOUNT_CODES.map(({ code, percent, minSubtotal, firstOrderOnly, active, partner }) => ({ code, percent, minSubtotal, firstOrderOnly: !!firstOrderOnly, active, partner: partner || '' }));
+      return json(res, 200, { orders: list, codes, products: PRODUCTS.length });
     }
 
     if (req.method === 'POST') {

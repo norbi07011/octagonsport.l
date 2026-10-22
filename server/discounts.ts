@@ -4,6 +4,7 @@
 //   minSubtotal    – minimalna wartość produktów (€), 0 = brak minimum
 //   firstOrderOnly – tylko dla klientów, którzy jeszcze nic nie kupili w tym sklepie (sprawdzane po e-mailu w Mollie)
 //   active         – false = kod wyłączony
+//   partner        – czyj to kod (pokazywane w panelu /beheer → zakładka „Kody”)
 import { mollie, round2 } from './shared';
 
 export interface DiscountCode {
@@ -12,14 +13,14 @@ export interface DiscountCode {
   minSubtotal: number;
   firstOrderOnly?: boolean;
   active: boolean;
-  note?: string;
+  partner?: string;
 }
 
 export const DISCOUNT_CODES: DiscountCode[] = [
-  { code: 'DJZIBI', percent: 10, minSubtotal: 50, active: true, note: 'DJ Zibi' },
-  { code: 'BALAGANKUBA', percent: 10, minSubtotal: 50, active: true, note: 'Bałagan Team – Kuba' },
-  { code: 'RS6', percent: 10, minSubtotal: 0, active: true },
-  { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 30, firstOrderOnly: true, active: true, note: 'Dominik – tylko pierwsze zamówienie' },
+  { code: 'DJZIBI', percent: 10, minSubtotal: 50, active: true, partner: 'DJ Zibi' },
+  { code: 'BALAGANKUBA', percent: 10, minSubtotal: 50, active: true, partner: 'Bałagan Team – Kuba' },
+  { code: 'RS6', percent: 10, minSubtotal: 0, active: true, partner: '' },
+  { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 30, firstOrderOnly: true, active: true, partner: 'Dominik (kickboks)' },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);

@@ -20,7 +20,8 @@ interface Order {
   customer: { name: string; company: string; street: string; postalCode: string; city: string; country: string; email: string; phone: string };
   items: Item[];
 }
-type Tab = 'todo' | 'shipped' | 'all';
+type Tab = 'todo' | 'shipped' | 'all' | 'codes';
+interface CodeDef { code: string; percent: number; minSubtotal: number; firstOrderOnly: boolean; active: boolean; partner: string }
 
 const KEY = 'oct-admin-key';
 const SEEN = 'oct-admin-seen';
@@ -90,6 +91,7 @@ export const AdminOrdersPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [remember, setRemember] = useState(true);
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [codeDefs, setCodeDefs] = useState<CodeDef[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>('todo');
@@ -135,6 +137,7 @@ export const AdminOrdersPage: React.FC = () => {
       writeLS(SEEN, [...seen.current].slice(-300).join(','));
       first.current = false;
       setOrders(list);
+      setCodeDefs(d.codes || []);
     } catch {
       setError('Brak połączenia z serwerem. Panel działa tylko na stronie z Netlify.');
     } finally {
@@ -165,6 +168,7 @@ export const AdminOrdersPage: React.FC = () => {
       todo: l.filter(o => isPaid(o) && !o.shippedAt && !isRefunded(o)).length,
       shipped: l.filter(o => isPaid(o) && !!o.shippedAt).length,
       all: l.length,
+      codes: new Set(l.filter(o => o.code && isPaid(o)).map(o => o.code)).size,
     };
   }, [orders]);
 
@@ -233,13 +237,13 @@ export const AdminOrdersPage: React.FC = () => {
           </div>
         </div>
         <div className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 pb-3">
-          {([['todo', 'Do wysłania'], ['shipped', 'Wysłane'], ['all', 'Wszystkie']] as [Tab, string][]).map(([t, l]) => (
+          {([['todo', 'Do wysłania'], ['shipped', 'Wysłane'], ['all', 'Wszystkie'], ['codes', 'Kody']] as [Tab, string][]).map(([t, l]) => (
             <button key={t} onClick={() => setTab(t)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${tab === t ? 'bg-white text-black' : 'border border-neutral-700 text-neutral-300'}`}>
               {l} <span className={tab === t ? 'text-neutral-500' : 'text-neutral-500'}>{counts[t]}</span>
             </button>
           ))}
         </div>
-        <div className="mx-auto max-w-3xl px-4 pb-3">
+        <div className={`mx-auto max-w-3xl px-4 pb-3 ${tab === 'codes' ? 'hidden' : ''}`}>
           <label className="flex items-center gap-2 rounded-lg border border-neutral-800 bg-[#0d0d0d] px-3">
             <Search className="h-4 w-4 text-neutral-500" />
             <input value={q} onChange={ev => setQ(ev.target.value)} placeholder="Szukaj: numer, klient, produkt…" className="w-full bg-transparent py-2.5 text-sm outline-none" />
@@ -250,8 +254,9 @@ export const AdminOrdersPage: React.FC = () => {
       <main className="mx-auto max-w-3xl px-4 pt-3">
         {error && <p className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
         {!orders && !error && <p className="py-16 text-center text-neutral-500">Ładowanie zamówień…</p>}
-        {orders && !shown.length && <p className="py-16 text-center text-neutral-500">{tab === 'todo' ? 'Wszystko wysłane 💪' : 'Brak zamówień.'}</p>}
-        <ul className="space-y-2.5">
+        {orders && tab === 'codes' && <CodesView orders={orders} defs={codeDefs} onOpen={open} />}
+        {orders && tab !== 'codes' && !shown.length && <p className="py-16 text-center text-neutral-500">{tab === 'todo' ? 'Wszystko wysłane 💪' : 'Brak zamówień.'}</p>}
+        <ul className={`space-y-2.5 ${tab === 'codes' ? 'hidden' : ''}`}>
           {shown.map(o => (
             <li key={o.id}>
               <button onClick={() => open(o.id)} className="flex w-full items-center gap-3 rounded-xl border border-neutral-800 bg-[#0d0d0d] p-3 text-left active:bg-[#151515]">
@@ -415,6 +420,111 @@ const OrderDetail: React.FC<{ o: Order; adminKey: string; onBack: () => void; on
         </div>
       )}
       {toast && <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-lg bg-white px-4 py-3 text-center text-sm font-semibold text-black shadow-2xl">{toast}</div>}
+    </div>
+  );
+};
+
+/* ---------- Zakładka „Kody”: zestawienie kodów rabatowych per partner ---------- */
+type Period = 'month' | 'prev' | 'year' | 'all';
+const PERIODS: [Period, string][] = [['month', 'Ten miesiąc'], ['prev', 'Poprzedni miesiąc'], ['year', 'Ten rok'], ['all', 'Wszystko']];
+
+const inPeriod = (iso: string | null, p: Period) => {
+  if (!iso) return false;
+  if (p === 'all') return true;
+  const d = new Date(iso);
+  const now = new Date();
+  if (p === 'year') return d.getFullYear() === now.getFullYear();
+  const ref = p === 'month' ? now : new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+};
+
+const CodesView: React.FC<{ orders: Order[]; defs: CodeDef[]; onOpen: (id: string) => void }> = ({ orders, defs, onOpen }) => {
+  const [period, setPeriod] = useState<Period>('month');
+  const [openCode, setOpenCode] = useState('');
+
+  const stats = useMemo(() => {
+    const used = orders.filter(o => o.code && isPaid(o) && !isRefunded(o) && inPeriod(o.paidAt || o.createdAt, period));
+    // wszystkie kody z listy + ewentualne stare kody, które pojawiły się w zamówieniach
+    const all: CodeDef[] = [...defs];
+    used.forEach(o => { if (!all.some(d => d.code === o.code)) all.push({ code: o.code, percent: 0, minSubtotal: 0, firstOrderOnly: false, active: false, partner: '' }); });
+    return all
+      .map(d => {
+        const list = used.filter(o => o.code === d.code).sort((a, b) => Date.parse(b.paidAt || b.createdAt) - Date.parse(a.paidAt || a.createdAt));
+        return {
+          def: d,
+          list,
+          count: list.length,
+          revenue: list.reduce((s, o) => s + o.amount - o.refunded, 0),
+          discount: list.reduce((s, o) => s + o.discount, 0),
+        };
+      })
+      .sort((a, b) => b.revenue - a.revenue || Number(b.def.active) - Number(a.def.active));
+  }, [orders, defs, period]);
+
+  const sum = stats.reduce((s, x) => ({ count: s.count + x.count, revenue: s.revenue + x.revenue, discount: s.discount + x.discount }), { count: 0, revenue: 0, discount: 0 });
+  const totalPaid = orders.filter(o => isPaid(o) && !isRefunded(o) && inPeriod(o.paidAt || o.createdAt, period)).length;
+
+  return (
+    <div className="space-y-3 pb-6">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {PERIODS.map(([p, l]) => (
+          <button key={p} onClick={() => setPeriod(p)} className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ${period === p ? 'bg-[#D71920] text-white' : 'border border-neutral-700 text-neutral-300'}`}>{l}</button>
+        ))}
+      </div>
+
+      {/* Podsumowanie */}
+      <div className="grid grid-cols-3 gap-2 rounded-xl border border-neutral-800 bg-[#0d0d0d] p-3 text-center">
+        <div><p className="text-2xl font-bold">{sum.count}</p><p className="text-[11px] text-neutral-500">zamówień z kodem{totalPaid ? ` (z ${totalPaid})` : ''}</p></div>
+        <div><p className="text-2xl font-bold">{eur(sum.revenue)}</p><p className="text-[11px] text-neutral-500">obrót z kodów</p></div>
+        <div><p className="text-2xl font-bold text-emerald-300">{eur(sum.discount)}</p><p className="text-[11px] text-neutral-500">rabatów dla klientów</p></div>
+      </div>
+
+      {/* Kody / partnerzy */}
+      {stats.map(({ def, list, count, revenue, discount }) => {
+        const open = openCode === def.code;
+        return (
+          <div key={def.code} className={`rounded-xl border bg-[#0d0d0d] ${count ? 'border-neutral-700' : 'border-neutral-800'}`}>
+            <button onClick={() => setOpenCode(open ? '' : def.code)} className="w-full p-3.5 text-left">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold">{def.partner || <span className="text-neutral-500">(partner nieprzypisany)</span>}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-bold text-emerald-300">{def.code}</span>
+                    {def.percent > 0 && <span className="text-[11px] text-neutral-400">-{def.percent}%{def.minSubtotal ? ` · od ${eur(def.minSubtotal)}` : ''}{def.firstOrderOnly ? ' · tylko 1. zamówienie' : ''}</span>}
+                    {!def.active && <span className="rounded-md border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-500">nieaktywny</span>}
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-2xl font-bold leading-none">{count}</p>
+                  <p className="text-[10px] text-neutral-500">zamówień</p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-lg bg-black/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-neutral-500">Obrót (zapłacone)</p><p className="font-semibold">{eur(revenue)}</p></div>
+                <div className="rounded-lg bg-black/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-neutral-500">Rabat udzielony</p><p className="font-semibold text-emerald-300">{eur(discount)}</p></div>
+              </div>
+            </button>
+            {open && (
+              <ul className="divide-y divide-neutral-800 border-t border-neutral-800">
+                {list.length === 0 && <li className="px-3.5 py-3 text-sm text-neutral-500">Brak zamówień z tym kodem w tym okresie.</li>}
+                {list.map(o => (
+                  <li key={o.id}>
+                    <button onClick={() => onOpen(o.id)} className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left active:bg-[#151515]">
+                      {o.items[0] && <img src={photoOf(o.items[0])} alt="" className="h-10 w-10 shrink-0 rounded bg-white object-contain" />}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{o.order} · {o.customer.name}</p>
+                        <p className="text-[11px] text-neutral-500">{new Date(o.paidAt || o.createdAt).toLocaleDateString('pl-PL')} · rabat -{eur(o.discount)}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold">{eur(o.amount - o.refunded)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+      <p className="px-1 text-[11px] leading-relaxed text-neutral-600">Liczone tylko opłacone i niezwrócone zamówienia. Obrót = kwota zapłacona przez klienta (z wysyłką, po rabacie). Nowe kody i partnerów dopisuje się w pliku server/discounts.ts.</p>
     </div>
   );
 };
