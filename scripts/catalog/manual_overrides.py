@@ -63,6 +63,14 @@ def rule_price(p):
     return None
 
 
+# Produkty usunięte ze sklepu na prośbę właściciela (ukryte na stałe; żeby przywrócić – usuń slug z listy)
+REMOVED = [
+    'winterjas-octagon-hibernal',
+    'jas-octagon-no-face',
+    'hoodie-octagon-small-logo-zip-zonder-capuchon-zwart',
+    'hoodie-octagon-zip-stripe-zonder-capuchon-zwart-wit',
+]
+
 HIDE_SALE = True  # ukryj produkty z wyprzedaży bez ręcznej ceny
 
 
@@ -84,6 +92,12 @@ def apply(cat):
             p['published'] = False
             p['hiddenReason'] = 'sale-ended-2026-10'
             hidden += 1
+    for p in cat['products']:
+        if p['slug'] in REMOVED:
+            p['published'] = False
+            p['hiddenReason'] = 'removed-by-owner'
+            hidden += 1
+    missing += [s for s in REMOVED if not any(p['slug'] == s for p in cat['products'])]
     return priced, hidden, missing
 
 
