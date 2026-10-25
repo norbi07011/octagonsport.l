@@ -41,6 +41,9 @@ BY_SLUG = {
     'dames-t-shirt-octagon-oct-zwart': 29.99,
     'dames-t-shirt-octagon-oct-wit': 29.99,
     'mma-handschoenen-octagon-gold-edition-1-0-goud': 49.99,
+    # bluzy z kapturem na zamek – wyjątek od 64,99 (25.10.2026)
+    'hoodie-octagon-small-logo-zip-met-capuchon-zwart': 69.99,
+    'hoodie-octagon-zip-stripe-met-capuchon-zwart-wit': 69.99,
 }
 
 
