@@ -8,7 +8,7 @@ import { Language } from '../types';
 type T = Record<Language, string>;
 
 export interface PartnerLink {
-  type: 'instagram' | 'facebook' | 'website' | 'tiktok' | 'youtube';
+  type: 'instagram' | 'facebook' | 'website' | 'tiktok' | 'youtube' | 'whatsapp';
   url: string;
   /** Tekst wyświetlany przy linku, np. @nazwa albo domena */
   label: string;
@@ -116,6 +116,28 @@ export const PARTNERS: Partner[] = [
     links: [
       { type: 'instagram', url: 'https://www.instagram.com/flyhighinktattoostudio/', label: '@flyhighinktattoostudio' },
       { type: 'facebook', url: 'https://www.facebook.com/share/18e7x5QvcR/', label: 'Fly High Tattoo' },
+    ],
+  },
+  {
+    id: 'norbs-service',
+    name: 'Norbs Service',
+    logoShape: 'square',
+    glow: 'rgba(160,80,255,.30)',
+    role: { nl: 'Partner · Websites & marketing', en: 'Partner · Websites & marketing', pl: 'Partner · Strony internetowe i marketing' },
+    description: {
+      nl: 'Norbs Service – Creative Digital Solutions. Websites en webshops op maat, Instagram-reels en trainingsvideo’s voor sportscholen en sporters, en online marketing. Ook de webshop van OctagonSportNL is door Norbs Service gebouwd.',
+      en: 'Norbs Service – Creative Digital Solutions. Custom websites and webshops, Instagram reels and training videos for gyms and athletes, and online marketing. The OctagonSportNL webshop was also built by Norbs Service.',
+      pl: 'Norbs Service – Creative Digital Solutions. Strony internetowe i sklepy na zamówienie, rolki na Instagram i filmy treningowe dla klubów i zawodników oraz marketing internetowy. Sklep OctagonSportNL też zbudował Norbs Service.',
+    },
+    logo: '/images/partners/norbs-service-logo.webp',
+    tags: [
+      { nl: 'Websites & webshops', en: 'Websites & webshops', pl: 'Strony i sklepy' },
+      { nl: 'Instagram-reels', en: 'Instagram reels', pl: 'Rolki na Instagram' },
+      { nl: 'Trainingsvideo’s', en: 'Training videos', pl: 'Filmy treningowe' },
+      { nl: 'Marketing', en: 'Marketing', pl: 'Marketing' },
+    ],
+    links: [
+      { type: 'whatsapp', url: 'https://wa.me/31642474314', label: '+31 6 42474314' },
     ],
   },
 ];
