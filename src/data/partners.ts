@@ -140,6 +140,27 @@ export const PARTNERS: Partner[] = [
       { type: 'whatsapp', url: 'https://wa.me/31642474314', label: '+31 6 42474314' },
     ],
   },
+  {
+    id: 'evi-fashion',
+    name: 'Evi Fashion NL',
+    logoShape: 'square',
+    glow: 'rgba(212,170,80,.30)',
+    role: { nl: 'Partner · Mode', en: 'Partner · Fashion', pl: 'Partner · Moda' },
+    description: {
+      nl: 'Evi Fashion NL – mode voor vrouwen in Nederland. Volg Evi Fashion op Facebook en TikTok voor de nieuwste collecties en looks.',
+      en: 'Evi Fashion NL – women’s fashion in the Netherlands. Follow Evi Fashion on Facebook and TikTok for the latest collections and looks.',
+      pl: 'Evi Fashion NL – moda damska w Holandii. Obserwuj Evi Fashion na Facebooku i TikToku, żeby zobaczyć najnowsze kolekcje i stylizacje.',
+    },
+    logo: '/images/partners/evi-fashion-logo.webp',
+    tags: [
+      { nl: 'Damesmode', en: 'Women’s fashion', pl: 'Moda damska' },
+      { nl: 'Nieuwe collecties', en: 'New collections', pl: 'Nowe kolekcje' },
+    ],
+    links: [
+      { type: 'facebook', url: 'https://www.facebook.com/share/19hfUL3tsS/', label: 'Evi Fashion NL' },
+      { type: 'tiktok', url: 'https://www.tiktok.com/@evifashionnl', label: '@evifashionnl' },
+    ],
+  },
 ];
 
 /** Influencerzy / ambasadorzy – na razie pusto, sekcja pokaże "wkrótce". */
