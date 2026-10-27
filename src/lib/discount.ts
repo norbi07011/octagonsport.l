@@ -52,13 +52,15 @@ export function useDiscount(subtotal: number, lang: string) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, subtotal, lang }),
         });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error('');
+        const d = await r.json().catch(() => null);
+        // brak poprawnej odpowiedzi serwera – pokaż numer błędu, żeby łatwo znaleźć przyczynę
+        if (!r.ok || !d) throw new Error(`HTTP ${r.status}${d ? '' : ' (geen JSON)'}`);
         if (!d.ok) { setError(d.error || ''); return false; }
         write({ code: d.code, percent: d.percent, minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly });
         return true;
-      } catch {
-        setError(lang === 'pl' ? 'Nie udało się sprawdzić kodu. Spróbuj ponownie.' : lang === 'en' ? 'Could not check the code. Please try again.' : 'De code kon niet worden gecontroleerd. Probeer het opnieuw.');
+      } catch (e: any) {
+        const info = e?.message ? ` [${e.message}]` : ' [offline]';
+        setError((lang === 'pl' ? 'Nie udało się sprawdzić kodu. Spróbuj ponownie.' : lang === 'en' ? 'Could not check the code. Please try again.' : 'De code kon niet worden gecontroleerd. Probeer het opnieuw.') + info);
         return false;
       } finally {
         setBusy(false);
