@@ -21,6 +21,7 @@ export const DISCOUNT_CODES: DiscountCode[] = [
   { code: 'BALAGANKUBA', percent: 10, minSubtotal: 50, active: true, partner: 'Bałagan Team – Kuba' },
   { code: 'RS6', percent: 10, minSubtotal: 0, active: true, partner: '' },
   { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 30, firstOrderOnly: true, active: true, partner: 'Dominik (kickboks)' },
+  { code: 'BERKANO10', percent: 10, minSubtotal: 0, active: true, partner: 'Berkano' },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);
