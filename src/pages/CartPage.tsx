@@ -45,7 +45,8 @@ export const CartPage: React.FC = () => {
     products
   } = useStore();
 
-  const disc = useDiscount(subtotal, language);
+  // kod rabatowy (podgląd – ostatecznie liczy serwer): % od całego rachunku (produkty + wysyłka)
+  const disc = useDiscount(Math.round((subtotal + shippingFee) * 100) / 100, language);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Recommendations: products not in cart
@@ -56,11 +57,9 @@ export const CartPage: React.FC = () => {
 
   const freeShippingProgress = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
-  // rabat z kodu (podgląd – ostatecznie liczy serwer); darmowa wysyłka liczona od kwoty PRZED rabatem
   const discountAmount = disc.amount;
-  const goods = Math.round((subtotal - discountAmount) * 100) / 100;
   const shipAfter = shippingFee;
-  const finalTotal = Math.max(0, Number((goods + shipAfter).toFixed(2)));
+  const finalTotal = Math.max(0, Number((subtotal + shipAfter - discountAmount).toFixed(2)));
   const subtotalExclVat = Number((finalTotal / 1.21).toFixed(2));
   const vatAmount = Number((finalTotal - subtotalExclVat).toFixed(2));
 

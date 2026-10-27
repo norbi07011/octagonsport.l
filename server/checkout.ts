@@ -94,14 +94,19 @@ export default async function handler(req: any, res: any) {
 
   const subtotal = round2(cart.reduce((s, i) => s + i.product.price * i.quantity, 0));
 
-  // --- kod rabatowy (liczony tylko tutaj, na serwerze)
+  const delivery = body.deliveryMethod === 'pickup' ? 'pickup' : 'home';
+  // darmowa wysyłka liczona od kwoty za produkty (kod nie odbiera darmowej dostawy)
+  const quote = calcShipping(cart, subtotal, delivery);
+  if (quote.freightItems.length) return fail(400, 'freight');
+
+  // --- kod rabatowy (liczony tylko tutaj, na serwerze): % od CAŁEGO rachunku (produkty + wysyłka)
   let discount = 0;
   let discountCode = '';
   let discountPercent = 0;
   if (normalizeCode(body.discountCode)) {
     let r;
     try {
-      r = await checkDiscount(body.discountCode, subtotal, customer.email);
+      r = await checkDiscount(body.discountCode, round2(subtotal + quote.fee), customer.email);
     } catch (e: any) {
       console.error('Discount check error', e?.status, e?.message);
       return fail(502, 'mollie');
@@ -111,13 +116,7 @@ export default async function handler(req: any, res: any) {
     discountCode = r.code;
     discountPercent = r.percent;
   }
-  const goods = round2(subtotal - discount);
-
-  const delivery = body.deliveryMethod === 'pickup' ? 'pickup' : 'home';
-  // darmowa wysyłka liczona od kwoty za produkty PRZED rabatem (kod nie odbiera darmowej dostawy)
-  const quote = calcShipping(cart, subtotal, delivery);
-  if (quote.freightItems.length) return fail(400, 'freight');
-  const total = round2(goods + quote.fee);
+  const total = round2(subtotal + quote.fee - discount);
 
   const site = siteUrl(req);
   const order = orderNumber();

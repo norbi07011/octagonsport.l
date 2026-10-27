@@ -15,7 +15,7 @@ import { BRAND_MARK } from '../components/layout/BrandMark';
 interface Item { productId: string; name: string; image: string; url: string; sku: string; size: string; color: string; qty: number; unit: number; total: number }
 interface Order {
   id: string; order: string; status: string; method: string; mode: string; createdAt: string; paidAt: string | null;
-  amount: number; refunded: number; shippingFee: number; discount: number; code: string; delivery: 'home' | 'pickup'; notes: string; kvk: string; vat: string; lang: string;
+  amount: number; refunded: number; shippingFee: number; discount: number; code: string; codePartner?: string; delivery: 'home' | 'pickup'; notes: string; kvk: string; vat: string; lang: string;
   shippedAt: string | null; tracking: string;
   customer: { name: string; company: string; street: string; postalCode: string; city: string; country: string; email: string; phone: string };
   items: Item[];
@@ -68,7 +68,7 @@ const Badges: React.FC<{ o: Order }> = ({ o }) => {
         ? <Badge className="border-sky-500/30 bg-sky-500/15 text-sky-300"><Truck className="h-3 w-3" /> Wysłane</Badge>
         : <Badge className="border-amber-400/40 bg-amber-400/20 text-amber-200"><Package className="h-3 w-3" /> Do wysłania</Badge>)}
       {isRefunded(o) ? <Badge className="border-red-500/30 bg-red-500/15 text-red-300">Zwrócone</Badge> : <Badge className={cls}>{label}</Badge>}
-      {o.code && <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">{o.code}</Badge>}
+      {o.code && <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">{o.code}{o.codePartner ? ` · ${o.codePartner}` : ''}</Badge>}
       {o.mode === 'test' && <Badge className="border-fuchsia-500/30 bg-fuchsia-500/15 text-fuchsia-300">TEST</Badge>}
     </div>
   );
@@ -360,7 +360,7 @@ const OrderDetail: React.FC<{ o: Order; adminKey: string; onBack: () => void; on
           </ul>
           <div className="mt-1 border-t border-neutral-800 px-1 pt-2">
             <div className={`${row} text-neutral-400`}><span>Produkty</span><span>{eur(subtotal)}</span></div>
-            {o.discount > 0 && <div className={`${row} text-emerald-300`}><span>Kod rabatowy {o.code}</span><span>-{eur(o.discount)}</span></div>}
+            {o.discount > 0 && <div className={`${row} text-emerald-300`}><span>Kod rabatowy {o.code}{o.codePartner ? ` (${o.codePartner})` : ''}</span><span>-{eur(o.discount)}</span></div>}
             <div className={`${row} text-neutral-400`}><span>Wysyłka</span><span>{o.shippingFee ? eur(o.shippingFee) : 'gratis'}</span></div>
             <div className={`${row} text-base font-bold`}><span>Zapłacono</span><span>{eur(o.amount)}</span></div>
             {o.refunded > 0 && <div className={`${row} text-red-300`}><span>Zwrócono</span><span>-{eur(o.refunded)}</span></div>}

@@ -4,6 +4,7 @@
 import { COMPANY, COMPANY_ADDRESS_LINE } from '../src/config/company';
 import { env, escapeHtml as e, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
 import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
+import { partnerOf } from './discounts';
 
 const eur = (v: unknown) => Number(v || 0).toFixed(2).replace('.', ',');
 
@@ -72,7 +73,7 @@ export default async function handler(req: any, res: any) {
       const shopEmail = env('SHOP_EMAIL') || COMPANY.email;
       await sendMail(
         shopEmail,
-        `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)}${meta.code ? ` [kod ${meta.code}]` : ''} – ${items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`).join(', ').slice(0, 120)}`,
+        `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)}${meta.code ? ` [kod ${meta.code}${partnerOf(meta.code) ? ` – ${partnerOf(meta.code)}` : ''}]` : ''} – ${items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`).join(', ').slice(0, 120)}`,
         emailLayout(`<p><strong>Nowe opłacone zamówienie</strong> (${e(p.method || '')}${p.mode === 'test' ? ' · TEST' : ''})</p>
 <p><strong>Numer zamówienia:</strong> ${e(order)}<br><strong>Mollie:</strong> ${e(p.id)}<br><strong>Dostawa:</strong> ${meta.delivery === 'pickup' ? 'punkt PostNL' : 'do domu'}</p>
 <table style="width:100%;border-collapse:collapse;font-size:14px">${itemRowsHtml(items)}${discRow}${shipRow}

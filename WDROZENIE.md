@@ -90,9 +90,9 @@ Włącz powiadomienia z aplikacji pocztowej w telefonie, a mail z listą produkt
 ## Kody rabatowe
 
 Lista kodów jest w pliku `server/discounts.ts` (tylko na serwerze – nie widać jej w kodzie strony).
-Każdy kod: procent rabatu, minimalna kwota za produkty, opcjonalnie „tylko pierwsze zamówienie”, włączony/wyłączony.
+Każdy kod: 10% od całego rachunku (produkty + wysyłka), bez minimum i bez innych warunków; przy kodzie zapisany partner.
 Rabat liczy serwer i wysyła do Mollie jako osobną pozycję „Kortingscode …”, więc klient płaci kwotę po rabacie.
-Darmowa wysyłka liczy się od kwoty PRZED rabatem (kod nie odbiera darmowej dostawy).
+Darmowa wysyłka liczy się od kwoty za produkty przed rabatem (kod nie odbiera darmowej dostawy).
 Kod widać w panelu /beheer (zielona plakietka) i w mailu o zamówieniu.
 Żeby dodać/wyłączyć kod – napisz do Claude albo zmień listę i wypchnij do GitHub.
 

@@ -1,6 +1,6 @@
 // Kody rabatowe – TYLKO na serwerze (nie trafiają do kodu strony, więc nie da się ich podejrzeć).
 // Żeby dodać / wyłączyć kod: zmień listę poniżej i wypchnij do GitHub (Netlify przebuduje sklep).
-//   percent        – rabat w % od wartości produktów (bez wysyłki)
+//   percent        – rabat w % od CAŁEGO rachunku (produkty + wysyłka)
 //   minSubtotal    – minimalna wartość produktów (€), 0 = brak minimum
 //   firstOrderOnly – tylko dla klientów, którzy jeszcze nic nie kupili w tym sklepie (sprawdzane po e-mailu w Mollie)
 //   active         – false = kod wyłączony
@@ -17,10 +17,11 @@ export interface DiscountCode {
 }
 
 export const DISCOUNT_CODES: DiscountCode[] = [
-  { code: 'DJZIBI', percent: 10, minSubtotal: 50, active: true, partner: 'DJ Zibi' },
-  { code: 'BALAGANKUBA', percent: 10, minSubtotal: 50, active: true, partner: 'Bałagan Team – Kuba' },
+  // Ustalenie właściciela (27.10.2026): każdy kod = 10% od całego rachunku, bez minimum i bez innych warunków.
+  { code: 'DJZIBI', percent: 10, minSubtotal: 0, active: true, partner: 'DJ Zibi' },
+  { code: 'BALAGANKUBA', percent: 10, minSubtotal: 0, active: true, partner: 'Bałagan Team – Kuba' },
   { code: 'RS6', percent: 10, minSubtotal: 0, active: true, partner: '' },
-  { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 30, firstOrderOnly: true, active: true, partner: 'Dominik (kickboks)' },
+  { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 0, active: true, partner: 'Dominik (kickboks)' },
   { code: 'BERKANO10', percent: 10, minSubtotal: 0, active: true, partner: 'Berkano' },
 ];
 
@@ -57,3 +58,6 @@ export async function checkDiscount(raw: unknown, subtotal: number, email?: stri
   if (d.firstOrderOnly && email && (await hasPaidBefore(email))) return { ok: false, reason: 'used' };
   return { ok: true, code: d.code, percent: d.percent, amount: round2((subtotal * d.percent) / 100), minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly };
 }
+
+/** Czyj to kod (do panelu i maili). */
+export const partnerOf = (code: string) => DISCOUNT_CODES.find(c => c.code === code)?.partner || '';

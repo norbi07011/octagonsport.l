@@ -44,13 +44,12 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const cancelled = currentPath.includes('status=geannuleerd');
-  // kod rabatowy (podgląd – ostatecznie liczy serwer); darmowa wysyłka od kwoty PRZED rabatem
-  const disc = useDiscount(subtotal, lang);
-  const goods = Math.round((subtotal - disc.amount) * 100) / 100;
   const quote = calcShipping(cart, subtotal, delivery);
   const homeQuote = calcShipping(cart, subtotal, 'home');
   const pickupQuote = calcShipping(cart, subtotal, 'pickup');
-  const total = Math.round((goods + quote.fee) * 100) / 100;
+  // kod rabatowy (podgląd – ostatecznie liczy serwer): % od całego rachunku (produkty + wysyłka)
+  const disc = useDiscount(Math.round((subtotal + quote.fee) * 100) / 100, lang);
+  const total = Math.round((subtotal + quote.fee - disc.amount) * 100) / 100;
   const vat = Math.round((total * 21) / 121 * 100) / 100;
 
   const validate = () => {

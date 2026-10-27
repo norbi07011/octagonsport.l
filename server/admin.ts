@@ -7,7 +7,7 @@
 import { PRODUCTS } from '../src/data/products';
 import { env, escapeHtml as e, json, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
 import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
-import { DISCOUNT_CODES } from './discounts';
+import { DISCOUNT_CODES, partnerOf } from './discounts';
 
 /** Porównanie haseł odporne na pomiar czasu. */
 const safeEqual = (a: string, b: string) => {
@@ -47,6 +47,7 @@ const toOrder = (p: any, site: string) => {
     shippingFee: shipping,
     discount: Math.abs((p.lines || []).filter((l: any) => l.type === 'discount').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0)) || Number(meta.disc || 0),
     code: meta.code || '',
+    codePartner: meta.code ? partnerOf(meta.code) : '',
     delivery: meta.delivery === 'pickup' ? 'pickup' : 'home',
     notes: meta.notes || '',
     kvk: meta.kvk || '',
