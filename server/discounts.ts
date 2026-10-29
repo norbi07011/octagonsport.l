@@ -23,6 +23,7 @@ export const DISCOUNT_CODES: DiscountCode[] = [
   { code: 'RS6', percent: 10, minSubtotal: 0, active: true, partner: '' },
   { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 0, active: true, partner: 'Dominik (kickboks)' },
   { code: 'BERKANO10', percent: 10, minSubtotal: 0, active: true, partner: 'Berkano' },
+  { code: 'MIRO_SW', percent: 10, minSubtotal: 0, active: true, partner: 'Trener Miro (@trener_miro_sw)' },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);
@@ -51,8 +52,9 @@ export async function hasPaidBefore(email: string): Promise<boolean> {
 
 /** Sprawdza kod dla danej wartości produktów. E-mail podaj, gdy trzeba sprawdzić „tylko pierwsze zamówienie”. */
 export async function checkDiscount(raw: unknown, subtotal: number, email?: string): Promise<DiscountCheck> {
-  const code = normalizeCode(raw);
-  const d = DISCOUNT_CODES.find(c => c.active && c.code === code);
+  // porównujemy same litery i cyfry: „miro sw”, „MIROSW”, „Miro-SW” = MIRO_SW
+  const key = normalizeCode(raw).replace(/[^A-Z0-9]/g, '');
+  const d = key ? DISCOUNT_CODES.find(c => c.active && c.code.replace(/[^A-Z0-9]/g, '') === key) : undefined;
   if (!d) return { ok: false, reason: 'unknown' };
   if (subtotal < d.minSubtotal) return { ok: false, reason: 'min', minSubtotal: d.minSubtotal };
   if (d.firstOrderOnly && email && (await hasPaidBefore(email))) return { ok: false, reason: 'used' };

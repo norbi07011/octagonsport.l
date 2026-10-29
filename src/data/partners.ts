@@ -314,6 +314,24 @@ export const INFLUENCERS: Partner[] = [
       { type: 'youtube', url: 'https://www.youtube.com/@berkanoofficial', label: '@berkanoofficial' },
     ],
   },
+  {
+    id: 'trener-miro-sw',
+    name: 'Trener Miro',
+    logoShape: 'photo',
+    glow: 'rgba(255,150,40,.24)',
+    role: { nl: 'Trainer · Partner', en: 'Trainer · Partner', pl: 'Trener · Partner' },
+    description: {
+      nl: 'Trener Miro – trainer en partner van OctagonSportNL. Volg Miro op Instagram voor trainingen en motivatie. Met zijn code MIRO_SW krijg je 10% korting op je bestelling.',
+      en: 'Trener Miro – trainer and partner of OctagonSportNL. Follow Miro on Instagram for training and motivation. With his code MIRO_SW you get 10% off your order.',
+      pl: 'Trener Miro – trener i partner OctagonSportNL. Obserwuj Miro na Instagramie: treningi i motywacja. Z jego kodem MIRO_SW masz 10% rabatu na zamówienie.',
+    },
+    logo: '/images/partners/trener-miro-sw.webp',
+    tags: [
+      { nl: 'Training', en: 'Training', pl: 'Treningi' },
+      { nl: 'Code MIRO_SW · -10%', en: 'Code MIRO_SW · -10%', pl: 'Kod MIRO_SW · -10%' },
+    ],
+    links: [{ type: 'instagram', url: 'https://www.instagram.com/trener_miro_sw/', label: '@trener_miro_sw' }],
+  },
 ];
 
 export const PARTNERS_HERO_IMAGE = '/images/partners/marris-gym-groep.webp';
