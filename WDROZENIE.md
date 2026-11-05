@@ -87,6 +87,21 @@ Status wysyłki zapisuje się w Mollie (metadane płatności) – nie trzeba baz
 Powiadomienia o nowym zamówieniu ze zdjęciami przychodzą mailem na `SHOP_EMAIL` (wymaga Resend – Krok 6).
 Włącz powiadomienia z aplikacji pocztowej w telefonie, a mail z listą produktów i zdjęciami pojawi się od razu.
 
+## Powiadomienia o zamówieniach (telefon + maile)
+
+**Push na telefon (5 minut, bez konta):**
+1. Zainstaluj aplikację **ntfy** (Google Play / App Store).
+2. Wymyśl tajną nazwę kanału, np. `octagon-zamowienia-k7x29qp` (jak hasło – kto ją zna, widzi powiadomienia).
+3. W aplikacji: **+ → Subscribe to topic** → wpisz tę nazwę.
+4. Netlify → Environment variables → `NTFY_TOPIC` = ta sama nazwa → Trigger deploy.
+5. Panel `/beheer` → 🔔 Powiadomienia → Wyślij test.
+
+**Maile (potwierdzenia dla klientów + powiadomienia dla sklepu) – Resend:**
+1. resend.com → konto → **Domains → Add domain** `octagonsport.nl` → dodaj pokazane rekordy DNS u rejestratora domeny → poczekaj na „Verified”.
+2. **API Keys → Create** → skopiuj `re_...`.
+3. Netlify: `RESEND_API_KEY` = `re_...`, `MAIL_FROM` = `OctagonSportNL <shop@octagonsport.nl>`, `SHOP_EMAIL` = adres właścicielki → Trigger deploy.
+4. Panel `/beheer` → 🔔 Powiadomienia → Wyślij test (pokaże dokładny błąd, jeśli coś jest nie tak).
+
 ## Kody rabatowe
 
 Lista kodów jest w pliku `server/discounts.ts` (tylko na serwerze – nie widać jej w kodzie strony).

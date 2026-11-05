@@ -63,17 +63,61 @@ export const readBody = (req: any) => {
 export const escapeHtml = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
+/** Ostatni błąd wysyłki maila (pokazywany w panelu /beheer przy teście powiadomień). */
+export let lastMailError = '';
+
 export async function sendMail(to: string, subject: string, html: string, replyTo?: string) {
   const key = env('RESEND_API_KEY');
-  if (!key || !to) return false;
+  lastMailError = '';
+  if (!key) { lastMailError = 'Brak zmiennej RESEND_API_KEY w Netlify'; return false; }
+  if (!to) { lastMailError = 'Brak adresu odbiorcy'; return false; }
   const from = env('MAIL_FROM') || `OctagonSportNL <${COMPANY.email}>`;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, html, reply_to: replyTo || COMPANY.email }),
-  });
-  if (!res.ok) console.error('Resend error', res.status, await res.text().catch(() => ''));
-  return res.ok;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to: [to], subject, html, reply_to: replyTo || COMPANY.email }),
+    });
+    if (!res.ok) {
+      lastMailError = `Resend ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`;
+      console.error('Resend error', lastMailError);
+    }
+    return res.ok;
+  } catch (e: any) {
+    lastMailError = `Resend: ${e?.message || 'brak połączenia'}`;
+    console.error(lastMailError);
+    return false;
+  }
+}
+
+/**
+ * Powiadomienie push na telefon przez ntfy.sh (darmowa aplikacja „ntfy” na Androida i iPhone'a).
+ * NTFY_TOPIC = tajna, długa nazwa kanału (jak hasło) – właściciel subskrybuje ją w aplikacji.
+ * Działa niezależnie od maili.
+ */
+export async function sendPush(opts: { title: string; message: string; click?: string; image?: string; tags?: string; priority?: number }) {
+  const topic = env('NTFY_TOPIC');
+  if (!topic) return { ok: false, error: 'Brak zmiennej NTFY_TOPIC w Netlify' };
+  try {
+    const res = await fetch('https://ntfy.sh/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        title: opts.title,
+        message: opts.message,
+        click: opts.click,
+        attach: opts.image,
+        tags: opts.tags ? opts.tags.split(',') : undefined,
+        priority: opts.priority ?? 5,
+        actions: opts.click ? [{ action: 'view', label: 'Otwórz zamówienie', url: opts.click }] : undefined,
+      }),
+    });
+    if (!res.ok) return { ok: false, error: `ntfy ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}` };
+    return { ok: true, error: '' };
+  } catch (e: any) {
+    return { ok: false, error: `ntfy: ${e?.message || 'brak połączenia'}` };
+  }
 }
 
 export const json = (res: any, status: number, data: unknown) => {

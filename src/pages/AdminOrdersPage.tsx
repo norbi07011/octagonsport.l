@@ -98,6 +98,7 @@ export const AdminOrdersPage: React.FC = () => {
   const [q, setQ] = useState('');
   const [openId, setOpenId] = useState(() => (typeof location !== 'undefined' ? location.hash.replace('#', '') : ''));
   const [toast, setToast] = useState('');
+  const [notifyOpen, setNotifyOpen] = useState(false);
   const seen = useRef<Set<string>>(new Set(readLS(SEEN).split(',').filter(Boolean)));
   const first = useRef(true);
 
@@ -228,9 +229,7 @@ export const AdminOrdersPage: React.FC = () => {
           <img src={BRAND_MARK} alt="" className="h-8 w-8" />
           <h1 className="font-bebas text-3xl leading-none tracking-wide">Zamówienia</h1>
           <div className="ml-auto flex items-center gap-2">
-            {'Notification' in window && Notification.permission === 'default' && (
-              <button onClick={() => Notification.requestPermission().then(() => flash('Powiadomienia ustawione'))} className="rounded-full border border-neutral-700 px-3 py-1.5 text-xs">🔔 Powiadomienia</button>
-            )}
+            <button onClick={() => setNotifyOpen(true)} className="rounded-full border border-neutral-700 px-3 py-1.5 text-xs">🔔 Powiadomienia</button>
             <button onClick={() => load()} aria-label="Odśwież" className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -278,6 +277,7 @@ export const AdminOrdersPage: React.FC = () => {
           ))}
         </ul>
       </main>
+      {notifyOpen && <NotifyPanel adminKey={key} onClose={() => setNotifyOpen(false)} />}
       {toast && <div className="fixed inset-x-4 bottom-6 z-50 mx-auto max-w-sm rounded-lg bg-white px-4 py-3 text-center text-sm font-semibold text-black shadow-2xl">{toast}</div>}
     </div>
   );
@@ -525,6 +525,64 @@ const CodesView: React.FC<{ orders: Order[]; defs: CodeDef[]; onOpen: (id: strin
         );
       })}
       <p className="px-1 text-[11px] leading-relaxed text-neutral-600">Liczone tylko opłacone i niezwrócone zamówienia. Obrót = kwota zapłacona przez klienta (z wysyłką, po rabacie). Nowe kody i partnerów dopisuje się w pliku server/discounts.ts.</p>
+    </div>
+  );
+};
+
+/* ---------- Test powiadomień: mail + push, z opisem czego brakuje ---------- */
+interface NotifyResult {
+  config: { resendKey: boolean; mailFrom: string; shopEmail: string; shopEmailSet: boolean; ntfyTopic: boolean };
+  mail: { ok: boolean; error: string; to: string };
+  push: { ok: boolean; error: string };
+}
+const NotifyPanel: React.FC<{ adminKey: string; onClose: () => void }> = ({ adminKey, onClose }) => {
+  const [busy, setBusy] = useState(false);
+  const [r, setR] = useState<NotifyResult | null>(null);
+  const [err, setErr] = useState('');
+  const run = async () => {
+    setBusy(true); setErr(''); setR(null);
+    try {
+      const res = await fetch('/api/admin-orders', { method: 'POST', headers: { 'x-admin-key': adminKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'test-notify' }) });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d) throw new Error(`HTTP ${res.status}`);
+      setR(d);
+    } catch (e: any) { setErr(`Nie udało się wykonać testu (${e?.message || 'brak połączenia'}).`); }
+    finally { setBusy(false); }
+  };
+  const Row: React.FC<{ ok: boolean; title: string; children?: React.ReactNode }> = ({ ok, title, children }) => (
+    <div className={`rounded-lg border p-3 text-sm ${ok ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-red-500/30 bg-red-500/10'}`}>
+      <p className={`font-semibold ${ok ? 'text-emerald-300' : 'text-red-300'}`}>{ok ? '✓' : '✗'} {title}</p>
+      {children && <div className="mt-1 text-xs leading-relaxed text-neutral-300">{children}</div>}
+    </div>
+  );
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center" onClick={onClose}>
+      <div className="max-h-[90svh] w-full max-w-md overflow-y-auto rounded-2xl border border-neutral-800 bg-[#0d0d0d] p-4" onClick={e => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="font-bebas text-2xl tracking-wide">Powiadomienia</p>
+          <button onClick={onClose} className="text-sm text-neutral-400">Zamknij</button>
+        </div>
+        <p className="mb-3 text-xs leading-relaxed text-neutral-400">Wysyła testowy mail na adres sklepu i testowe powiadomienie push na telefon. Pokaże dokładnie, co działa, a czego brakuje w Netlify.</p>
+        <button disabled={busy} onClick={run} className="mb-3 w-full rounded-xl bg-[#D71920] py-3 font-semibold uppercase tracking-widest disabled:opacity-60">{busy ? 'Wysyłanie…' : 'Wyślij test'}</button>
+        {err && <p className="mb-2 text-sm text-red-300">{err}</p>}
+        {r && (
+          <div className="space-y-2">
+            <Row ok={r.mail.ok} title={r.mail.ok ? `Mail wysłany na ${r.mail.to}` : 'Maile NIE działają'}>
+              {r.mail.ok ? 'Sprawdź skrzynkę (także folder Spam). Klienci też dostaną potwierdzenia.' : (
+                <>
+                  <p>{r.mail.error}</p>
+                  {!r.config.resendKey && <p className="mt-1">Dodaj w Netlify zmienną <b>RESEND_API_KEY</b> (klucz z resend.com).</p>}
+                  {r.config.resendKey && /domain|verify|not verified|403/i.test(r.mail.error) && <p className="mt-1">Domena nadawcy nie jest zweryfikowana w Resend. Zweryfikuj octagonsport.nl w Resend → Domains (rekordy DNS) i ustaw <b>MAIL_FROM</b> na adres z tej domeny.</p>}
+                </>
+              )}
+            </Row>
+            <Row ok={r.config.shopEmailSet} title={`Adres powiadomień: ${r.config.shopEmail}`}>{r.config.shopEmailSet ? 'Ustawiony przez SHOP_EMAIL.' : 'Używany jest adres domyślny. Ustaw SHOP_EMAIL w Netlify, jeśli powiadomienia mają iść na inny adres.'}</Row>
+            <Row ok={r.push.ok} title={r.push.ok ? 'Push wysłany na telefon' : 'Powiadomienia push NIE działają'}>
+              {r.push.ok ? 'Jeśli nic nie przyszło, sprawdź, czy w aplikacji ntfy subskrybujesz dokładnie tę nazwę kanału co NTFY_TOPIC.' : <p>{r.push.error}. Zainstaluj aplikację „ntfy”, wymyśl tajną nazwę kanału i wpisz ją w Netlify jako <b>NTFY_TOPIC</b>.</p>}
+            </Row>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

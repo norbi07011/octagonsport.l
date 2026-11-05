@@ -5,7 +5,8 @@
 // Dostęp tylko z hasłem: nagłówek x-admin-key = zmienna ADMIN_PASSWORD (Netlify → Environment variables).
 // Status wysyłki zapisujemy w metadanych płatności w Mollie – nie potrzeba osobnej bazy danych.
 import { PRODUCTS } from '../src/data/products';
-import { env, escapeHtml as e, json, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
+import { env, escapeHtml as e, json, Lang, lastMailError, mollie, readBody, sendMail, sendPush, siteUrl } from './shared';
+import { COMPANY } from '../src/config/company';
 import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
 import { DISCOUNT_CODES, partnerOf } from './discounts';
 
@@ -98,6 +99,26 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === 'POST') {
       const body = readBody(req);
+      // test powiadomień: mail na SHOP_EMAIL + push na telefon, z dokładnym opisem, czego brakuje
+      if (body.action === 'test-notify') {
+        const shopEmail = env('SHOP_EMAIL') || COMPANY.email;
+        const config = {
+          resendKey: !!env('RESEND_API_KEY'),
+          mailFrom: env('MAIL_FROM') || `OctagonSportNL <${COMPANY.email}> (domyślny)`,
+          shopEmail,
+          shopEmailSet: !!env('SHOP_EMAIL'),
+          ntfyTopic: !!env('NTFY_TOPIC'),
+        };
+        const mailOk = await sendMail(
+          shopEmail,
+          '✅ Test powiadomień – OctagonSportNL',
+          emailLayout('<p><strong>Maile działają.</strong></p><p>Tak będą przychodzić powiadomienia o nowych zamówieniach i potwierdzenia dla klientów.</p>')
+        );
+        const mailError = mailOk ? '' : lastMailError;
+        const push = await sendPush({ title: '✅ Test powiadomień – OctagonSportNL', message: 'Powiadomienia push działają. Tak przyjdzie informacja o każdym nowym zamówieniu.', click: `${site}/beheer`, tags: 'white_check_mark' });
+        return json(res, 200, { config, mail: { ok: mailOk, error: mailError, to: shopEmail }, push });
+      }
+
       const id = String(body.id || '');
       if (!/^tr_[A-Za-z0-9]+$/.test(id)) return json(res, 400, { error: 'bad-id' });
       const p = await mollie(`/payments/${id}`);

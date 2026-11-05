@@ -2,7 +2,7 @@
 // Status zawsze pobieramy z API Mollie (fałszywe wywołania nic nie zrobią).
 // Po opłaceniu: mail z potwierdzeniem do klienta + powiadomienie do sklepu (jeśli ustawiono Resend).
 import { COMPANY, COMPANY_ADDRESS_LINE } from '../src/config/company';
-import { env, escapeHtml as e, Lang, mollie, readBody, sendMail, siteUrl } from './shared';
+import { env, escapeHtml as e, Lang, mollie, readBody, sendMail, sendPush, siteUrl } from './shared';
 import { emailLayout, itemRowsHtml, linesToItems } from './orderItems';
 import { partnerOf } from './discounts';
 
@@ -57,6 +57,20 @@ export default async function handler(req: any, res: any) {
       const shipRow = shipFee ? `<tr><td></td><td style="padding:8px 0;color:#555">Verzending</td><td style="padding:8px 0;text-align:right;color:#555">€${eur(shipFee)}</td></tr>` : '';
       const disc = Math.abs((p.lines || []).filter((l: any) => l.type === 'discount').reduce((s: number, l: any) => s + Number(l.totalAmount?.value || 0), 0)) || Number(meta.disc || 0);
       const discRow = disc ? `<tr><td></td><td style="padding:8px 0;color:#0a7d3b">Kortingscode ${e(meta.code || '')}</td><td style="padding:8px 0;text-align:right;color:#0a7d3b">-€${eur(disc)}</td></tr>` : '';
+
+      // 1) natychmiastowy push na telefon właściciela (niezależny od maili)
+      const pushed = await sendPush({
+        title: `🛒 Nowe zamówienie ${order} – €${eur(p.amount?.value)}${p.mode === 'test' ? ' (TEST)' : ''}`,
+        message: [
+          ...items.map(i => `${i.qty}× ${i.name}${i.size ? ` (${i.size})` : ''}`),
+          `${[addr?.givenName, addr?.familyName].filter(Boolean).join(' ')}${addr?.city ? `, ${addr.city}` : ''}`,
+          meta.code ? `Kod: ${meta.code}${partnerOf(meta.code) ? ` – ${partnerOf(meta.code)}` : ''}` : '',
+        ].filter(Boolean).join('\n'),
+        click: `${site}/beheer#${p.id}`,
+        image: items[0]?.image,
+        tags: 'shopping_cart',
+      });
+      if (!pushed.ok && env('NTFY_TOPIC')) console.error('Push error', pushed.error);
 
       if (email) {
         await sendMail(
