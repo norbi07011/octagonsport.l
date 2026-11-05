@@ -76,7 +76,8 @@ export async function sendMail(to: string, subject: string, html: string, replyT
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to: [to], subject, html, reply_to: replyTo || COMPANY.email }),
+      // kilka adresów naraz: „a@x.nl, b@gmail.com”
+      body: JSON.stringify({ from, to: to.split(/[,;\s]+/).filter(Boolean), subject, html, reply_to: replyTo || COMPANY.email }),
     });
     if (!res.ok) {
       lastMailError = `Resend ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`;

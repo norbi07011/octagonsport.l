@@ -99,7 +99,7 @@ Włącz powiadomienia z aplikacji pocztowej w telefonie, a mail z listą produkt
 **Maile (potwierdzenia dla klientów + powiadomienia dla sklepu) – Resend:**
 1. resend.com → konto → **Domains → Add domain** `octagonsport.nl` → dodaj pokazane rekordy DNS u rejestratora domeny → poczekaj na „Verified”.
 2. **API Keys → Create** → skopiuj `re_...`.
-3. Netlify: `RESEND_API_KEY` = `re_...`, `MAIL_FROM` = `OctagonSportNL <shop@octagonsport.nl>`, `SHOP_EMAIL` = adres właścicielki → Trigger deploy.
+3. Netlify: `RESEND_API_KEY` = `re_...`, `MAIL_FROM` = `OctagonSportNL <shop@octagonsport.nl>`, `SHOP_EMAIL` = adres(y) właścicielki – kilka oddziel przecinkiem → Trigger deploy.
 4. Panel `/beheer` → 🔔 Powiadomienia → Wyślij test (pokaże dokładny błąd, jeśli coś jest nie tak).
 
 ## Kody rabatowe
