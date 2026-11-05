@@ -562,7 +562,7 @@ const NotifyPanel: React.FC<{ adminKey: string; onClose: () => void }> = ({ admi
           <p className="font-bebas text-2xl tracking-wide">Powiadomienia</p>
           <button onClick={onClose} className="text-sm text-neutral-400">Zamknij</button>
         </div>
-        <p className="mb-3 text-xs leading-relaxed text-neutral-400">Wysyła testowy mail na adres sklepu i testowe powiadomienie push na telefon. Pokaże dokładnie, co działa, a czego brakuje w Netlify.</p>
+        <p className="mb-3 text-xs leading-relaxed text-neutral-400">Wysyła testowy mail na adres(y) powiadomień sklepu. Pokaże dokładnie, czy maile działają, a jeśli nie – czego brakuje w Netlify.</p>
         <button disabled={busy} onClick={run} className="mb-3 w-full rounded-xl bg-[#D71920] py-3 font-semibold uppercase tracking-widest disabled:opacity-60">{busy ? 'Wysyłanie…' : 'Wyślij test'}</button>
         {err && <p className="mb-2 text-sm text-red-300">{err}</p>}
         {r && (
@@ -577,9 +577,9 @@ const NotifyPanel: React.FC<{ adminKey: string; onClose: () => void }> = ({ admi
               )}
             </Row>
             <Row ok={r.config.shopEmailSet} title={`Adres powiadomień: ${r.config.shopEmail}`}>{r.config.shopEmailSet ? 'Ustawiony przez SHOP_EMAIL.' : 'Używany jest adres domyślny. Ustaw SHOP_EMAIL w Netlify, jeśli powiadomienia mają iść na inny adres.'}</Row>
-            <Row ok={r.push.ok} title={r.push.ok ? 'Push wysłany na telefon' : 'Powiadomienia push NIE działają'}>
+            {r.config.ntfyTopic && <Row ok={r.push.ok} title={r.push.ok ? 'Push wysłany na telefon' : 'Powiadomienia push NIE działają'}>
               {r.push.ok ? 'Jeśli nic nie przyszło, sprawdź, czy w aplikacji ntfy subskrybujesz dokładnie tę nazwę kanału co NTFY_TOPIC.' : <p>{r.push.error}. Zainstaluj aplikację „ntfy”, wymyśl tajną nazwę kanału i wpisz ją w Netlify jako <b>NTFY_TOPIC</b>.</p>}
-            </Row>
+            </Row>}
           </div>
         )}
       </div>
