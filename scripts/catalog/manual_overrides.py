@@ -36,7 +36,41 @@ RASHGUARDS_4999 = [
     'rashguard-octagon-premium-marble-camo-zwart-rood-korte-mouw',
 ]
 
+# Produkty dodane ręcznie (brak ich w eksporcie dostawcy) – wstawiane, jeśli nie ma ich w katalogu
+EXTRA_PRODUCTS = [
+    {
+        'id': 'oct-4352', 'supplierId': '4352',
+        'slug': 'sportshirt-octagon-polska-orzel-wit-limited-edition',
+        'name': 'Sportshirt Octagon Polska Orzeł wit Limited Edition',
+        'name_en': 'Octagon Poland Eagle White Limited Edition Sports T-shirt',
+        'name_pl': 'Koszulka sportowa Octagon Polska Orzeł biała Limited Edition',
+        'brand': 'OCTAGON', 'descKey': '92', 'category': 'heren', 'subcategory': 'sportshirts',
+        'sport': ['fitness'], 'gender': 'men', 'material': '100% polyester',
+        'colors': [{'name': 'wit', 'hex': '#ffffff'}], 'sizes': ['S', 'M', 'L', 'XL', 'XXL'],
+        'isSale': False, 'stock': 20, 'isNew': True, 'published': True, 'group': 'oct-5011', 'pricePln': 119,
+        'images': [
+            '/products/koszulka-sportowa-octagon-pol-biala_crop.webp',
+            '/products/koszulka-sportowa-octagon-pol_16297.webp',
+            '/products/koszulka-sportowa-octagon-mie_16239.webp',
+        ],
+        'short': {
+            'nl': 'Sportshirt van Octagon uit de Limited Edition-collectie, van licht, ademend materiaal – ideaal voor elke sport.',
+            'en': 'sports T-shirt from LIMITED EDITION',
+            'pl': 'koszulkę sportową z LIMITOWANEJ EDYCJI',
+        },
+        'priceEur': 39.99,
+    },
+]
+
+# Nowości (06.11.2026): Polska Orzeł Limited Edition – cena jak reszta koszulek
+NEW_SLUGS = [
+    'sportshirt-octagon-polska-orzel-wit-limited-edition',
+    'sportshirt-octagon-polska-orzel-rood-limited-edition',
+]
+
 BY_SLUG = {
+    'sportshirt-octagon-polska-orzel-wit-limited-edition': 39.99,
+    'sportshirt-octagon-polska-orzel-rood-limited-edition': 39.99,
     **{s: 49.99 for s in RASHGUARDS_4999},
     'dames-t-shirt-octagon-oct-zwart': 29.99,
     'dames-t-shirt-octagon-oct-wit': 29.99,
@@ -79,6 +113,13 @@ HIDE_SALE = True  # ukryj produkty z wyprzedaży bez ręcznej ceny
 
 def apply(cat):
     priced = hidden = 0
+    have = {p['id'] for p in cat['products']}
+    for extra in EXTRA_PRODUCTS:
+        if extra['id'] not in have:
+            cat['products'].append(dict(extra))
+    for p in cat['products']:
+        if p['slug'] in NEW_SLUGS:
+            p['isNew'] = True
     missing = [s for s in BY_SLUG if not any(p['slug'] == s for p in cat['products'])]
     for p in cat['products']:
         price = rule_price(p)

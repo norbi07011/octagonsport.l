@@ -1,3 +1,4 @@
+import { arrivalRank } from '../data/newArrivals';
 import { CategorySpotlight } from '../components/showcase/CategorySpotlight';
 import { spotlightForCategory } from '../data/spotlights';
 import { KidsGearUp } from '../components/showcase/KidsGearUp';
@@ -92,6 +93,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
 
       return true;
     }).sort((a, b) => {
+      // ręcznie wybrane nowości zawsze na początku strony /nieuw i przy sortowaniu „nieuwste”
+      if (isNewPage || sortBy === 'newest') {
+        const r = arrivalRank(a.id) - arrivalRank(b.id);
+        if (r) return r;
+      }
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;

@@ -5,6 +5,7 @@ import { SHOWCASES } from '../data/showcases';
 import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
 import { KidsGearUp } from '../components/showcase/KidsGearUp';
 import { ArenaHero } from '../components/home/ArenaHero';
+import { NewArrivals } from '../components/home/NewArrivals';
 import { subscribeNewsletter, NEWSLETTER_ERROR } from '../lib/newsletter';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -162,6 +163,9 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* NOWOŚCI – ręcznie wybrane (src/data/newArrivals.ts) */}
+      <NewArrivals />
 
       {/* ========================================================================= */}
       {/* SECTION 02.2 — PREMIUM SHOWCASE (karuzela 3D + scroll story rękawic Kevlar) */}

@@ -1,3 +1,4 @@
+import { NEW_ARRIVALS } from './newArrivals';
 // =====================================================================
 // Katalog produktów OctagonSportNL
 // Źródło danych: src/data/catalog.json (wygenerowany z oferty dostawcy
@@ -166,8 +167,16 @@ const onePerGroup = (list: Product[]) => {
   });
 };
 
-export const getNewProducts = (lang: Language = 'nl') =>
-  onePerGroup(PRODUCTS.filter(p => p.isNew)).slice(0, 12).map(p => getLocalizedProduct(p, lang));
+export const getNewProducts = (lang: Language = 'nl') => {
+  // ręcznie wybrane nowości (data/newArrivals.ts) zawsze na początku, każdy kolor osobno
+  const picked = NEW_ARRIVALS.map(id => PRODUCTS.find(p => p.id === id)).filter((p): p is Product => !!p);
+  const rest = onePerGroup(PRODUCTS.filter(p => p.isNew && !NEW_ARRIVALS.includes(p.id)));
+  return [...picked, ...rest].slice(0, 12).map(p => getLocalizedProduct(p, lang));
+};
+
+/** Ręcznie wybrane nowości do sekcji „Net binnen” na stronie głównej. */
+export const getArrivals = (lang: Language = 'nl') =>
+  NEW_ARRIVALS.map(id => PRODUCTS.find(p => p.id === id)).filter((p): p is Product => !!p).map(p => getLocalizedProduct(p, lang));
 
 /** Brak danych o sprzedaży – zwracamy produkty wyróżnione. */
 export const getBestsellers = (lang: Language = 'nl') => getFeaturedProducts(lang);
