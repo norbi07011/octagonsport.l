@@ -97,26 +97,6 @@ export const PARTNERS: Partner[] = [
       { nl: 'Trainingszaal', en: 'Training gym', pl: 'Sala treningowa' },
     ],
     links: [{ type: 'instagram', url: 'https://www.instagram.com/nassau.grappling/', label: '@nassau.grappling' }],
-  },  {
-    id: 'fly-high-tattoo',
-    name: 'Fly High Tattoo',
-    logoShape: 'square',
-    glow: 'rgba(210,210,210,.16)',
-    role: { nl: 'Partner · Tattoostudio', en: 'Partner · Tattoo studio', pl: 'Partner · Studio tatuażu' },
-    description: {
-      nl: 'Fly High Ink Tattoo Studio is een tattoostudio, opgericht in 2020. Bekijk hun werk op Instagram en Facebook.',
-      en: 'Fly High Ink Tattoo Studio is a tattoo studio, established in 2020. See their work on Instagram and Facebook.',
-      pl: 'Fly High Ink Tattoo Studio to studio tatuażu działające od 2020 roku. Zobacz ich prace na Instagramie i Facebooku.',
-    },
-    logo: '/images/partners/fly-high-tattoo-logo.webp',
-    tags: [
-      { nl: 'Tattoostudio', en: 'Tattoo studio', pl: 'Studio tatuażu' },
-      { nl: 'Sinds 2020', en: 'Since 2020', pl: 'Od 2020' },
-    ],
-    links: [
-      { type: 'instagram', url: 'https://www.instagram.com/flyhighinktattoostudio/', label: '@flyhighinktattoostudio' },
-      { type: 'facebook', url: 'https://www.facebook.com/share/18e7x5QvcR/', label: 'Fly High Tattoo' },
-    ],
   },
   {
     id: 'norbs-service',
