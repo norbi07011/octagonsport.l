@@ -60,15 +60,39 @@ EXTRA_PRODUCTS = [
         },
         'priceEur': 39.99,
     },
+    {
+        # Własny projekt (Octagon Sport × Berkano) – upamiętnienie wyzwolenia Bredy 29.10.1944 (dodano 12.11.2026)
+        'id': 'oct-breda-1944', 'supplierId': 'BREDA1944',
+        'slug': 'sportshirt-octagon-berkano-breda-1944-limited-edition',
+        'name': 'Sportshirt Octagon Berkano Breda 1944 Limited Edition',
+        'name_en': 'Octagon Berkano Breda 1944 Limited Edition Sports T-shirt',
+        'name_pl': 'Koszulka sportowa Octagon Berkano Breda 1944 Limited Edition',
+        'brand': 'OCTAGON', 'descKey': 'breda1944', 'category': 'heren', 'subcategory': 'sportshirts',
+        'sport': ['fitness', 'mma'], 'gender': 'men', 'material': '',
+        'colors': [{'name': 'zwart', 'hex': '#0a0a0a'}], 'sizes': ['S', 'M', 'L', 'XL', 'XXL'],
+        'isSale': False, 'stock': 20, 'isNew': True, 'published': True, 'group': 'oct-breda-1944', 'pricePln': 0,
+        'images': [
+            '/products/sportshirt-octagon-berkano-breda-1944-front.webp', '/products/sportshirt-octagon-berkano-breda-1944-back.webp', '/products/sportshirt-octagon-berkano-breda-1944-detail-back.webp',
+            '/products/sportshirt-octagon-berkano-breda-1944-detail-front.webp', '/products/sportshirt-octagon-berkano-breda-1944-detail-82.webp', '/products/sportshirt-octagon-berkano-breda-1944-detail-flag.webp',
+        ],
+        'short': {
+            'nl': 'Herdenkingsshirt voor de bevrijding van Breda op 29 oktober 1944 door de 1e Poolse Pantserdivisie van generaal Stanisław Maczek.',
+            'en': 'Commemorative shirt for the liberation of Breda on 29 October 1944 by General Stanisław Maczek’s 1st Polish Armoured Division.',
+            'pl': 'Koszulka upamiętniająca wyzwolenie Bredy 29 października 1944 r. przez 1. Dywizję Pancerną gen. Stanisława Maczka.',
+        },
+        'priceEur': 35.00,
+    },
 ]
 
 # Nowości (06.11.2026): Polska Orzeł Limited Edition – cena jak reszta koszulek
 NEW_SLUGS = [
+    'sportshirt-octagon-berkano-breda-1944-limited-edition',
     'sportshirt-octagon-polska-orzel-wit-limited-edition',
     'sportshirt-octagon-polska-orzel-rood-limited-edition',
 ]
 
 BY_SLUG = {
+    'sportshirt-octagon-berkano-breda-1944-limited-edition': 35.00,
     'sportshirt-octagon-polska-orzel-wit-limited-edition': 39.99,
     'sportshirt-octagon-polska-orzel-rood-limited-edition': 39.99,
     **{s: 49.99 for s in RASHGUARDS_4999},
@@ -145,8 +169,29 @@ def apply(cat):
     return priced, hidden, missing
 
 
+# Pełne opisy produktów dodanych ręcznie – dopisywane do public/data/desc-{nl,en,pl}.json
+DESC_DIR = ROOT / 'public/data'
+EXTRA_DESCS = {
+    'breda1944': {
+        'nl': '<p>Op 29 oktober 1944 bevrijdde de 1e Poolse Pantserdivisie onder leiding van generaal Stanisław Maczek de stad Breda. Dit Limited Edition-shirt van Octagon Sport × Berkano eert die gedeelde geschiedenis van Polen en Nederland.</p><ul><li>Voorkant: Octagon Sport Berkano-logo met huzarenhelm en vleugel</li><li>Achterkant: herdenkingsprint met de tekst „Za naszą i waszą wolność” (Voor onze en jullie vrijheid), 1. Dywizja Pancerna, gen. Stanisław Maczek, Breda 29.10.1944</li><li>Mouwen: nummer 82 in een octagon en de Poolse vlag</li><li>Limited Edition – op = op</li></ul>',
+        'en': '<p>On 29 October 1944 the 1st Polish Armoured Division, led by General Stanisław Maczek, liberated the city of Breda. This Octagon Sport × Berkano Limited Edition shirt honours that shared history of Poland and the Netherlands.</p><ul><li>Front: Octagon Sport Berkano logo with hussar helmet and wing</li><li>Back: commemorative print with “Za naszą i waszą wolność” (For our freedom and yours), 1. Dywizja Pancerna, Gen. Stanisław Maczek, Breda 29.10.1944</li><li>Sleeves: number 82 in an octagon and the Polish flag</li><li>Limited Edition – when it’s gone, it’s gone</li></ul>',
+        'pl': '<p>29 października 1944 roku 1. Dywizja Pancerna pod dowództwem gen. Stanisława Maczka wyzwoliła Bredę. Ta koszulka Limited Edition od Octagon Sport × Berkano upamiętnia wspólną historię Polski i Holandii.</p><ul><li>Przód: logo Octagon Sport Berkano z hełmem i skrzydłem husarskim</li><li>Tył: nadruk upamiętniający – „Za naszą i waszą wolność”, 1. Dywizja Pancerna, gen. Stanisław Maczek, Breda 29.10.1944</li><li>Rękawy: numer 82 w oktagonie i polska flaga</li><li>Limited Edition – do wyczerpania zapasów</li></ul>',
+    },
+}
+
+
+def apply_descs():
+    for lang in ('nl', 'en', 'pl'):
+        f = DESC_DIR / f'desc-{lang}.json'
+        d = json.load(open(f, encoding='utf-8'))
+        for key, texts in EXTRA_DESCS.items():
+            d[key] = texts[lang]
+        json.dump(d, open(f, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+
+
 if __name__ == '__main__':
     cat = json.load(open(CAT, encoding='utf-8'))
     priced, hidden, missing = apply(cat)
+    apply_descs()
     json.dump(cat, open(CAT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(f'ręczne ceny: {priced}, ukryte z wyprzedaży: {hidden}, brakujące slugi: {missing}')

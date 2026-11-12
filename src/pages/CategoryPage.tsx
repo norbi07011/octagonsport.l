@@ -2,6 +2,7 @@ import { arrivalRank } from '../data/newArrivals';
 import { CategorySpotlight } from '../components/showcase/CategorySpotlight';
 import { spotlightForCategory } from '../data/spotlights';
 import { KidsGearUp } from '../components/showcase/KidsGearUp';
+import { DropSpotlight } from '../components/home/DropSpotlight';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS, getLocalizedProduct, productInCategory, getSubcategoriesFor } from '../data/products';
@@ -188,6 +189,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryName }) => {
           </p>
         </div>
       </div>
+
+      {/* Nowości: wyróżniony drop w 3D */}
+      {isNewPage && !subParam && <DropSpotlight compact />}
 
       {/* Interaktywna karta kolekcji dla każdej kategorii (bez filtra podkategorii) */}
       {!subParam && (() => {

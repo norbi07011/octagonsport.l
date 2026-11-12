@@ -308,3 +308,19 @@
 .oct-spot-l { animation: oct-spot-l 9s ease-in-out infinite; }
 .oct-spot-r { animation: oct-spot-r 11s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .oct-spot-l, .oct-spot-r { animation: none; transform: translateX(-50%); } }
+
+/* DropSpotlight – iskry i błysk na koszulce */
+@keyframes drop-ember {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0; }
+  10% { opacity: .9; }
+  100% { transform: translate3d(30px, -520px, 0) scale(.3); opacity: 0; }
+}
+.drop-ember { animation: drop-ember 8s linear infinite; opacity: 0; }
+@keyframes drop-sheen { 0%, 55% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
+.drop-sheen {
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 48%, rgba(255,255,255,.05) 55%, transparent 65%);
+  background-size: 250% 100%;
+  animation: drop-sheen 4.6s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+@media (prefers-reduced-motion: reduce) { .drop-ember, .drop-sheen { animation: none; } .drop-ember { display: none; } }

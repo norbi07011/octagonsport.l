@@ -6,6 +6,7 @@ import { KidsFighterSelect } from '../components/showcase/KidsFighterSelect';
 import { KidsGearUp } from '../components/showcase/KidsGearUp';
 import { ArenaHero } from '../components/home/ArenaHero';
 import { NewArrivals } from '../components/home/NewArrivals';
+import { DropSpotlight } from '../components/home/DropSpotlight';
 import { subscribeNewsletter, NEWSLETTER_ERROR } from '../lib/newsletter';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/commerce/ProductCard';
@@ -114,6 +115,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* NOWOŚĆ – wyróżniony drop w 3D (Breda 1944) */}
+      <DropSpotlight />
 
       {/* ========================================================================= */}
       {/* SECTION 02 — SHOP BY DISCIPLINE */}
