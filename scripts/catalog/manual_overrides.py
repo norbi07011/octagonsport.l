@@ -58,7 +58,7 @@ EXTRA_PRODUCTS = [
             'en': 'sports T-shirt from LIMITED EDITION',
             'pl': 'koszulkę sportową z LIMITOWANEJ EDYCJI',
         },
-        'priceEur': 39.99,
+        'priceEur': 35.00,
     },
     {
         # Własny projekt (Octagon Sport × Berkano) – upamiętnienie wyzwolenia Bredy 29.10.1944 (dodano 12.11.2026)
@@ -84,7 +84,7 @@ EXTRA_PRODUCTS = [
     },
 ]
 
-# Nowości (06.11.2026): Polska Orzeł Limited Edition – cena jak reszta koszulek
+# Nowości: Polska Orzeł Limited Edition – 35,00 (zmiana 12.11.2026, wcześniej 39,99)
 NEW_SLUGS = [
     'sportshirt-octagon-berkano-breda-1944-limited-edition',
     'sportshirt-octagon-polska-orzel-wit-limited-edition',
@@ -93,8 +93,8 @@ NEW_SLUGS = [
 
 BY_SLUG = {
     'sportshirt-octagon-berkano-breda-1944-limited-edition': 35.00,
-    'sportshirt-octagon-polska-orzel-wit-limited-edition': 39.99,
-    'sportshirt-octagon-polska-orzel-rood-limited-edition': 39.99,
+    'sportshirt-octagon-polska-orzel-wit-limited-edition': 35.00,
+    'sportshirt-octagon-polska-orzel-rood-limited-edition': 35.00,
     **{s: 49.99 for s in RASHGUARDS_4999},
     'dames-t-shirt-octagon-oct-zwart': 29.99,
     'dames-t-shirt-octagon-oct-wit': 29.99,
