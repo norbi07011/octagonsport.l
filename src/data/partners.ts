@@ -141,7 +141,7 @@ export const PARTNERS: Partner[] = [
     links: [
       { type: 'instagram', url: 'https://www.instagram.com/bolinhanl/', label: '@bolinhanl' },
       { type: 'instagram', url: 'https://www.instagram.com/teambolinha/', label: '@teambolinha' },
-      { type: 'website', url: 'https://www.bolinha.nl/', label: 'bolinha.nl' },
+      { type: 'instagram', url: 'https://www.instagram.com/victor.dinizjj/', label: '@victor.dinizjj' },
     ],
   },
   {
