@@ -99,6 +99,52 @@ export const PARTNERS: Partner[] = [
     links: [{ type: 'instagram', url: 'https://www.instagram.com/nassau.grappling/', label: '@nassau.grappling' }],
   },
   {
+    id: 'slavia-fight-club',
+    name: 'Slavia Fight Club',
+    logoShape: 'photo',
+    glow: 'rgba(215,25,32,.28)',
+    role: { nl: 'Partner · Kickboksclub', en: 'Partner · Kickboxing club', pl: 'Partner · Klub kickboxingu' },
+    description: {
+      nl: 'Slavia Fight Club is een kickboksclub in Tilburg met trainingen voor kinderen en volwassenen. Volg de club op Instagram en Facebook voor het rooster en nieuws van de trainingen.',
+      en: 'Slavia Fight Club is a kickboxing club in Tilburg with training for children and adults. Follow the club on Instagram and Facebook for the schedule and news from training.',
+      pl: 'Slavia Fight Club to klub kickboxingu w Tilburgu – treningi dla dzieci i dorosłych. Obserwuj klub na Instagramie i Facebooku: grafik zajęć i wieści z treningów.',
+    },
+    logo: '/images/partners/slavia-fight-club-logo.webp',
+    tags: [
+      { nl: 'Kickboksen', en: 'Kickboxing', pl: 'Kickboxing' },
+      { nl: 'Jeugd & volwassenen', en: 'Kids & adults', pl: 'Dzieci i dorośli' },
+      { nl: 'Tilburg', en: 'Tilburg', pl: 'Tilburg' },
+    ],
+    links: [
+      { type: 'instagram', url: 'https://www.instagram.com/slavia_fight_club/', label: '@slavia_fight_club' },
+      { type: 'facebook', url: 'https://www.facebook.com/p/Slavia-Fight-Club-100042906427770/', label: 'Slavia Fight Club' },
+    ],
+  },
+  {
+    id: 'bolinha',
+    name: 'Bolinha',
+    logoShape: 'square',
+    glow: 'rgba(40,170,90,.26)',
+    role: { nl: 'Partner · Braziliaans Jiu-Jitsu', en: 'Partner · Brazilian Jiu-Jitsu', pl: 'Partner · Brazylijskie Jiu-Jitsu' },
+    description: {
+      nl: 'Bolinha is de Braziliaans Jiu-Jitsu-school van zwarte band Victor „Bolinha” Diniz in Tilburg, met lessen voor volwassenen en kinderen. Team Bolinha is het wedstrijdteam, met veel aandacht voor de ontwikkeling van de jeugd.',
+      en: 'Bolinha is the Brazilian Jiu-Jitsu school of black belt Victor “Bolinha” Diniz in Tilburg, with classes for adults and children. Team Bolinha is the competition team, with a strong focus on youth development.',
+      pl: 'Bolinha to szkoła brazylijskiego jiu-jitsu prowadzona w Tilburgu przez czarny pas Victora „Bolinhę” Diniza – zajęcia dla dorosłych i dzieci. Team Bolinha to drużyna zawodnicza, która mocno stawia na rozwój młodzieży.',
+    },
+    logo: '/images/partners/bolinha-logo.webp',
+    tags: [
+      { nl: 'Braziliaans Jiu-Jitsu', en: 'Brazilian Jiu-Jitsu', pl: 'Brazylijskie Jiu-Jitsu' },
+      { nl: 'Wedstrijdteam', en: 'Competition team', pl: 'Drużyna zawodnicza' },
+      { nl: 'Kids & jeugd', en: 'Kids & youth', pl: 'Dzieci i młodzież' },
+      { nl: 'Tilburg', en: 'Tilburg', pl: 'Tilburg' },
+    ],
+    links: [
+      { type: 'instagram', url: 'https://www.instagram.com/bolinhanl/', label: '@bolinhanl' },
+      { type: 'instagram', url: 'https://www.instagram.com/teambolinha/', label: '@teambolinha' },
+      { type: 'website', url: 'https://www.bolinha.nl/', label: 'bolinha.nl' },
+    ],
+  },
+  {
     id: 'norbs-service',
     name: 'Norbs Service',
     logoShape: 'square',
@@ -188,29 +234,6 @@ export const INFLUENCERS: Partner[] = [
     ],
   },
   {
-    id: 'patryk-mma',
-    name: 'Patryk MMA',
-    logoShape: 'square',
-    glow: 'rgba(200,70,40,.25)',
-    role: { nl: 'Personal trainer · Kickboksclub', en: 'Personal trainer · Kickboxing club', pl: 'Trener personalny · Klub kickboxingu' },
-    description: {
-      nl: 'Patryk is personal trainer en leidt zijn eigen kickboksclub. Volg hem op Instagram, Facebook en TikTok voor trainingen, technieken en clubnieuws.',
-      en: 'Patryk is a personal trainer who runs his own kickboxing club. Follow him on Instagram, Facebook and TikTok for training, technique and club news.',
-      pl: 'Patryk to trener personalny prowadzący własny klub kickboxingu. Obserwuj go na Instagramie, Facebooku i TikToku – treningi, technika i wieści z klubu.',
-    },
-    logo: '/images/partners/patryk-mma-logo.webp',
-    tags: [
-      { nl: 'Personal training', en: 'Personal training', pl: 'Trening personalny' },
-      { nl: 'Kickboksen', en: 'Kickboxing', pl: 'Kickboxing' },
-      { nl: 'MMA', en: 'MMA', pl: 'MMA' },
-    ],
-    links: [
-      { type: 'instagram', url: 'https://www.instagram.com/patrykmma/', label: '@patrykmma' },
-      { type: 'facebook', url: 'https://www.facebook.com/share/14thjFpJ8aP/', label: 'Patryk MMA' },
-      { type: 'tiktok', url: 'https://www.tiktok.com/@patryk.mma', label: '@patryk.mma' },
-    ],
-  },
-  {
     id: 'kuba-balagan',
     name: 'Kuba Bałagan',
     logoShape: 'square',
@@ -272,26 +295,6 @@ export const INFLUENCERS: Partner[] = [
     links: [
       { type: 'instagram', url: 'https://www.instagram.com/diamond.hands.manual.therapy/', label: '@diamond.hands.manual.therapy' },
       { type: 'facebook', url: 'https://www.facebook.com/share/1Dom5mZNJq/', label: 'Diamond Hands' },
-    ],
-  },  {
-    id: 'berkano',
-    name: 'Berkano',
-    logoShape: 'photo',
-    glow: 'rgba(200,220,40,.22)',
-    role: { nl: 'Internetartiest · Creator', en: 'Online artist · Creator', pl: 'Artysta internetowy · Twórca' },
-    description: {
-      nl: 'Berkano is een Poolse internetartiest en contentmaker. Volg hem op Instagram en YouTube voor zijn nieuwste video’s en projecten.',
-      en: 'Berkano is a Polish online artist and content creator. Follow him on Instagram and YouTube for his latest videos and projects.',
-      pl: 'Berkano to polski artysta internetowy i twórca. Obserwuj go na Instagramie i YouTube – najnowsze filmy i projekty.',
-    },
-    logo: '/images/partners/berkano.webp',
-    tags: [
-      { nl: 'Creator', en: 'Creator', pl: 'Twórca' },
-      { nl: 'YouTube', en: 'YouTube', pl: 'YouTube' },
-    ],
-    links: [
-      { type: 'instagram', url: 'https://www.instagram.com/berkanopoland_official/', label: '@berkanopoland_official' },
-      { type: 'youtube', url: 'https://www.youtube.com/@berkanoofficial', label: '@berkanoofficial' },
     ],
   },
   {

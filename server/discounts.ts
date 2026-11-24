@@ -22,9 +22,9 @@ export const DISCOUNT_CODES: DiscountCode[] = [
   { code: 'BALAGANKUBA', percent: 10, minSubtotal: 0, active: true, partner: 'Bałagan Team – Kuba' },
   { code: 'RS6', percent: 10, minSubtotal: 0, active: true, partner: '' },
   { code: 'KICKDOMINIK5', percent: 10, minSubtotal: 0, active: true, partner: 'Dominik (kickboks)' },
-  { code: 'BERKANO10', percent: 10, minSubtotal: 0, active: true, partner: 'Berkano' },
   { code: 'MIRO_SW', percent: 10, minSubtotal: 0, active: true, partner: 'Trener Miro (@trener_miro_sw)' },
   { code: 'HIGHKICK', percent: 10, minSubtotal: 0, active: true, partner: 'Highkick' },
+  { code: 'SLAVIA_FIGHT', percent: 10, minSubtotal: 0, active: true, partner: 'Slavia Fight' },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);
