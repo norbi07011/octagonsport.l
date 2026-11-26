@@ -23,5 +23,5 @@ export default async function handler(req: any, res: any) {
     const text = r.reason === 'min' ? MSG.min[lang].replace('{min}', String(r.minSubtotal)) : MSG.unknown[lang];
     return json(res, 200, { ok: false, reason: r.reason, minSubtotal: r.minSubtotal, error: text });
   }
-  return json(res, 200, { ok: true, code: r.code, percent: r.percent, minSubtotal: r.minSubtotal, firstOrderOnly: r.firstOrderOnly });
+  return json(res, 200, { ok: true, code: r.code, percent: r.percent, minSubtotal: r.minSubtotal, firstOrderOnly: r.firstOrderOnly, bundle: r.bundle });
 }

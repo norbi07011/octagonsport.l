@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { bundleAmount, BundleLine, BundleRule } from './bundle';
 
 /*
  * Kod rabatowy po stronie przeglądarki – tylko PODGLĄD (koszyk i kasa).
@@ -11,6 +12,8 @@ export interface AppliedDiscount {
   percent: number;
   minSubtotal: number;
   firstOrderOnly: boolean;
+  /** kod pakietowy (np. 2 pary legginsów za stałą cenę) – wtedy percent = 0 */
+  bundle?: BundleRule;
 }
 
 const KEY = 'oct-discount';
@@ -26,7 +29,7 @@ const write = (d: AppliedDiscount | null) => {
 
 export const clearDiscount = () => write(null);
 
-export function useDiscount(subtotal: number, lang: string) {
+export function useDiscount(subtotal: number, lang: string, cart: BundleLine[] = []) {
   const [applied, setApplied] = useState<AppliedDiscount | null>(read);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,7 +41,9 @@ export function useDiscount(subtotal: number, lang: string) {
   }, []);
 
   const belowMin = !!applied && subtotal < applied.minSubtotal;
-  const amount = applied && !belowMin ? Math.round(subtotal * applied.percent) / 100 : 0;
+  const amount = !applied || belowMin ? 0 : applied.bundle ? bundleAmount(applied.bundle, cart) : Math.round(subtotal * applied.percent) / 100;
+  /** kod pakietowy jest wpisany, ale w koszyku brakuje wymaganych produktów */
+  const bundleMissing = !!applied?.bundle && amount <= 0;
 
   const apply = useCallback(
     async (raw: string) => {
@@ -56,7 +61,7 @@ export function useDiscount(subtotal: number, lang: string) {
         // brak poprawnej odpowiedzi serwera – pokaż numer błędu, żeby łatwo znaleźć przyczynę
         if (!r.ok || !d) throw new Error(`HTTP ${r.status}${d ? '' : ' (geen JSON)'}`);
         if (!d.ok) { setError(d.error || ''); return false; }
-        write({ code: d.code, percent: d.percent, minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly });
+        write({ code: d.code, percent: d.percent, minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly, bundle: d.bundle || undefined });
         return true;
       } catch (e: any) {
         const info = e?.message ? ` [${e.message}]` : ' [offline]';
@@ -71,5 +76,5 @@ export function useDiscount(subtotal: number, lang: string) {
 
   const remove = useCallback(() => { setError(''); write(null); }, []);
 
-  return { applied, amount, belowMin, error, setError, busy, apply, remove };
+  return { applied, amount, belowMin, bundleMissing, error, setError, busy, apply, remove };
 }

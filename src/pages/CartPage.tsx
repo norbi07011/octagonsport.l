@@ -46,7 +46,7 @@ export const CartPage: React.FC = () => {
   } = useStore();
 
   // kod rabatowy (podgląd – ostatecznie liczy serwer): % od całego rachunku (produkty + wysyłka)
-  const disc = useDiscount(Math.round((subtotal + shippingFee) * 100) / 100, language);
+  const disc = useDiscount(Math.round((subtotal + shippingFee) * 100) / 100, language, cart);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Recommendations: products not in cart

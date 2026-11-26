@@ -93,7 +93,7 @@ export default async function handler(req: any, res: any) {
         path = next ? next.replace(/^https:\/\/api\.mollie\.com\/v2/, '') : null;
       }
       const list = all.map((p: any) => toOrder(p, site));
-      const codes = DISCOUNT_CODES.map(({ code, percent, minSubtotal, firstOrderOnly, active, partner }) => ({ code, percent, minSubtotal, firstOrderOnly: !!firstOrderOnly, active, partner: partner || '' }));
+      const codes = DISCOUNT_CODES.map(({ code, percent, minSubtotal, firstOrderOnly, active, partner, bundle }) => ({ code, percent, minSubtotal, firstOrderOnly: !!firstOrderOnly, active, partner: partner || '', bundle }));
       return json(res, 200, { orders: list, codes, products: PRODUCTS.length });
     }
 

@@ -21,7 +21,7 @@ interface Order {
   items: Item[];
 }
 type Tab = 'todo' | 'shipped' | 'all' | 'codes';
-interface CodeDef { code: string; percent: number; minSubtotal: number; firstOrderOnly: boolean; active: boolean; partner: string }
+interface CodeDef { code: string; percent: number; minSubtotal: number; firstOrderOnly: boolean; active: boolean; partner: string; bundle?: { subcategory: string; qty: number; price: number } }
 
 const KEY = 'oct-admin-key';
 const SEEN = 'oct-admin-seen';
@@ -490,6 +490,7 @@ const CodesView: React.FC<{ orders: Order[]; defs: CodeDef[]; onOpen: (id: strin
                   <p className="truncate text-base font-semibold">{def.partner || <span className="text-neutral-500">(partner nieprzypisany)</span>}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-bold text-emerald-300">{def.code}</span>
+                    {def.bundle && <span className="text-[11px] text-neutral-400">{def.bundle.qty} szt. ({def.bundle.subcategory}) za {eur(def.bundle.price)} · raz na zamówienie</span>}
                     {def.percent > 0 && <span className="text-[11px] text-neutral-400">-{def.percent}%{def.minSubtotal ? ` · od ${eur(def.minSubtotal)}` : ''}{def.firstOrderOnly ? ' · tylko 1. zamówienie' : ''}</span>}
                     {!def.active && <span className="rounded-md border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-500">nieaktywny</span>}
                   </div>
