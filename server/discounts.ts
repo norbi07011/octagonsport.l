@@ -26,6 +26,9 @@ export const DISCOUNT_CODES: DiscountCode[] = [
   { code: 'HIGHKICK', percent: 10, minSubtotal: 0, active: true, partner: 'Highkick' },
   { code: 'SLAVIA_FIGHT', percent: 10, minSubtotal: 0, active: true, partner: 'Slavia Fight' },
   { code: 'ERYCZEK20', percent: 10, minSubtotal: 0, active: true, partner: 'Eryczek' },
+  // Kody ogólne sklepu (26.11.2026) – % od całego rachunku, bez minimum.
+  { code: 'OCTAGON20', percent: 20, minSubtotal: 0, active: true, partner: '' },
+  { code: 'SUMMER30', percent: 30, minSubtotal: 0, active: true, partner: '' },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);
