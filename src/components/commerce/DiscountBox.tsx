@@ -11,16 +11,17 @@ export const DiscountBox: React.FC<{ d: D; lang: string }> = ({ d, lang }) => {
   const tr = (nl: string, en: string, pl: string) => (lang === 'pl' ? pl : lang === 'en' ? en : nl);
 
   if (d.applied) {
-    const warn = d.belowMin || d.bundleMissing;
-    const b = d.applied.bundle;
-    const bundleLabel = b ? tr(`${b.qty} voor ${formatEur(b.price)}`, `${b.qty} for ${formatEur(b.price)}`, `${b.qty} szt. za ${formatEur(b.price)}`) : '';
+    const warn = d.belowMin || d.scopeMissing;
+    const only = d.applied.only;
+    const leggings = only?.subcategory === 'leggings';
+    const scopeLabel = only ? (leggings ? tr(' op leggings', ' on leggings', ' na legginsy') : tr(' op actieproducten', ' on selected products', ' na wybrane produkty')) : '';
     return (
       <div className="oct-rise">
         <div className={`flex items-center justify-between gap-2 border px-3 py-2.5 text-xs ${warn ? 'border-amber-500/40 bg-amber-500/10' : 'border-emerald-700/60 bg-emerald-950/30'}`}>
           <span className={`flex min-w-0 items-center gap-2 font-mono ${warn ? 'text-amber-200' : 'text-emerald-300'}`}>
             <Check className="h-4 w-4 shrink-0" />
             <span className="truncate">
-              <strong>{d.applied.code}</strong> · {b ? bundleLabel : `-${d.applied.percent}%`}{d.amount > 0 ? ` (-${formatEur(d.amount)})` : ''}
+              <strong>{d.applied.code}</strong> · -{d.applied.percent}%{scopeLabel}{d.amount > 0 ? ` (-${formatEur(d.amount)})` : ''}
             </span>
           </span>
           <button type="button" onClick={d.remove} aria-label={tr('Code verwijderen', 'Remove code', 'Usuń kod')} className="shrink-0 text-neutral-400 hover:text-white">
@@ -32,11 +33,11 @@ export const DiscountBox: React.FC<{ d: D; lang: string }> = ({ d, lang }) => {
             {tr(`Geldt vanaf ${formatEur(d.applied.minSubtotal)} aan producten.`, `Applies from ${formatEur(d.applied.minSubtotal)} in products.`, `Działa od ${formatEur(d.applied.minSubtotal)} za produkty.`)}
           </p>
         )}
-        {d.bundleMissing && b && (
+        {d.scopeMissing && (
           <p className="mt-1.5 text-[11px] text-amber-200">
-            {b.subcategory === 'leggings'
-              ? tr(`Voeg ${b.qty} leggings toe aan je winkelwagen om deze code te gebruiken.`, `Add ${b.qty} leggings to your cart to use this code.`, `Dodaj do koszyka ${b.qty} pary legginsów, żeby kod zadziałał.`)
-              : tr(`Deze code geldt bij ${b.qty} artikelen uit de actie.`, `This code needs ${b.qty} items from the promotion.`, `Ten kod wymaga ${b.qty} produktów z promocji.`)}
+            {leggings
+              ? tr('Deze code geldt alleen voor leggings – voeg leggings toe aan je winkelwagen.', 'This code only applies to leggings – add leggings to your cart.', 'Ten kod działa tylko na legginsy – dodaj legginsy do koszyka.')
+              : tr('Deze code geldt alleen voor actieproducten.', 'This code only applies to selected products.', 'Ten kod działa tylko na wybrane produkty.')}
           </p>
         )}
         {d.applied.firstOrderOnly && !d.belowMin && (

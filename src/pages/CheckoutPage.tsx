@@ -96,7 +96,7 @@ export const CheckoutPage: React.FC = () => {
       if (!res.ok || !data.checkoutUrl) {
         if (Array.isArray(data.fields)) setBad(data.fields);
         // kod nieważny (np. już użyty przy wcześniejszym zamówieniu) – usuwamy go, klient może zapłacić bez kodu
-        if (data.discountError === 'used' || data.discountError === 'unknown' || data.discountError === 'bundle') disc.remove();
+        if (data.discountError === 'used' || data.discountError === 'unknown' || data.discountError === 'scope') disc.remove();
         throw new Error(data.error || '');
       }
       try {
@@ -285,7 +285,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="mt-4 space-y-2 border-t border-neutral-800 pt-4 text-sm">
               <div className="flex justify-between text-neutral-300"><span>{tr('Subtotaal', 'Subtotal', 'Produkty')}</span><span className="font-mono">{formatEur(subtotal)}</span></div>
               {disc.amount > 0 && (
-                <div className="flex justify-between text-emerald-400"><span>{tr('Korting', 'Discount', 'Rabat')} {disc.applied?.code}{disc.applied?.percent ? ` (-${disc.applied.percent}%)` : ''}</span><span className="font-mono">-{formatEur(disc.amount)}</span></div>
+                <div className="flex justify-between text-emerald-400"><span>{tr('Korting', 'Discount', 'Rabat')} {disc.applied?.code} (-{disc.applied?.percent}%)</span><span className="font-mono">-{formatEur(disc.amount)}</span></div>
               )}
               <div className="flex justify-between text-neutral-300"><span>{tr('Verzendkosten', 'Shipping', 'Wysyłka')}</span><span className="font-mono">{quote.fee === 0 ? <span className="text-emerald-400">GRATIS</span> : formatEur(quote.fee)}</span></div>
               <div className="flex justify-between border-t border-neutral-800 pt-3 text-lg font-bold"><span>{tr('Totaal', 'Total', 'Razem')}</span><span className="font-mono text-[#D71920]"><RollingNumber value={total} format={formatEur} /></span></div>

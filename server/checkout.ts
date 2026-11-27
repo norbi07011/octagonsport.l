@@ -19,7 +19,7 @@ const MSG = {
   mollie: { nl: 'Betaling kon niet worden gestart. Probeer het opnieuw.', en: 'Payment could not be started. Please try again.', pl: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.' },
   codeUnknown: { nl: 'Deze kortingscode bestaat niet of is verlopen. Verwijder de code en probeer opnieuw.', en: 'This discount code does not exist or has expired. Remove the code and try again.', pl: 'Ten kod rabatowy nie istnieje lub wygasł. Usuń kod i spróbuj ponownie.' },
   codeMin: { nl: 'Je kortingscode geldt pas vanaf een hoger bedrag aan producten.', en: 'Your discount code requires a higher product total.', pl: 'Twój kod rabatowy działa dopiero od wyższej kwoty za produkty.' },
-  codeBundle: { nl: 'Deze kortingscode geldt alleen met de juiste producten in je winkelwagen. Verwijder de code of pas je winkelwagen aan.', en: 'This discount code only works with the right products in your cart. Remove the code or adjust your cart.', pl: 'Ten kod rabatowy działa tylko z odpowiednimi produktami w koszyku. Usuń kod albo zmień koszyk.' },
+  codeScope: { nl: 'Deze kortingscode geldt alleen met de juiste producten in je winkelwagen. Verwijder de code of pas je winkelwagen aan.', en: 'This discount code only works with the right products in your cart. Remove the code or adjust your cart.', pl: 'Ten kod rabatowy działa tylko z odpowiednimi produktami w koszyku. Usuń kod albo zmień koszyk.' },
   codeUsed: { nl: 'Deze kortingscode geldt alleen voor je eerste bestelling.', en: 'This discount code is only valid for your first order.', pl: 'Ten kod rabatowy działa tylko przy pierwszym zamówieniu.' },
 };
 
@@ -112,7 +112,7 @@ export default async function handler(req: any, res: any) {
       console.error('Discount check error', e?.status, e?.message);
       return fail(502, 'mollie');
     }
-    if (!r.ok) return fail(400, r.reason === 'min' ? 'codeMin' : r.reason === 'used' ? 'codeUsed' : r.reason === 'bundle' ? 'codeBundle' : 'codeUnknown', { discountError: r.reason });
+    if (!r.ok) return fail(400, r.reason === 'min' ? 'codeMin' : r.reason === 'used' ? 'codeUsed' : r.reason === 'scope' ? 'codeScope' : 'codeUnknown', { discountError: r.reason });
     discount = r.amount;
     discountCode = r.code;
     discountPercent = r.percent;
@@ -141,7 +141,7 @@ export default async function handler(req: any, res: any) {
   if (discount > 0) {
     lines.push({
       type: 'discount',
-      description: discountPercent > 0 ? `Kortingscode ${discountCode} (-${discountPercent}%)` : `Kortingscode ${discountCode}`,
+      description: `Kortingscode ${discountCode} (-${discountPercent}%)`,
       quantity: 1,
       unitPrice: money(-discount),
       totalAmount: money(-discount),

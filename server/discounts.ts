@@ -5,9 +5,9 @@
 //   firstOrderOnly – tylko dla klientów, którzy jeszcze nic nie kupili w tym sklepie (sprawdzane po e-mailu w Mollie)
 //   active         – false = kod wyłączony
 //   partner        – czyj to kod (pokazywane w panelu /beheer → zakładka „Kody”)
-//   bundle         – kod pakietowy zamiast procentu: N sztuk z podkategorii za stałą cenę, raz na zamówienie
+//   only           – kod tylko na wybrane produkty: procent liczony wyłącznie od produktów z tej podkategorii
 import { mollie, round2 } from './shared';
-import { bundleAmount, BundleLine, BundleRule } from '../src/lib/bundle';
+import { scopedAmount, ScopeLine, ScopeRule } from '../src/lib/scopedDiscount';
 
 export interface DiscountCode {
   code: string;
@@ -16,7 +16,7 @@ export interface DiscountCode {
   firstOrderOnly?: boolean;
   active: boolean;
   partner?: string;
-  bundle?: BundleRule;
+  only?: ScopeRule;
 }
 
 export const DISCOUNT_CODES: DiscountCode[] = [
@@ -32,15 +32,15 @@ export const DISCOUNT_CODES: DiscountCode[] = [
   // Kody ogólne sklepu (26.11.2026) – % od całego rachunku, bez minimum.
   { code: 'OCTAGON20', percent: 20, minSubtotal: 0, active: true, partner: '' },
   { code: 'SUMMER30', percent: 30, minSubtotal: 0, active: true, partner: '' },
-  // Pakiet: dwie pary legginsów za €79,99 (zamiast 2 × €49,99), tylko raz na zamówienie.
-  { code: 'LEGGINS2', percent: 0, minSubtotal: 0, active: true, partner: '', bundle: { subcategory: 'leggings', qty: 2, price: 79.99 } },
+  // 10% tylko na legginsy (od jednej pary); reszta koszyka i wysyłka bez rabatu.
+  { code: 'LEGGINS2', percent: 10, minSubtotal: 0, active: true, partner: '', only: { subcategory: 'leggings' } },
 ];
 
 export const normalizeCode = (raw: unknown) => String(raw || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 40);
 
 export type DiscountCheck =
-  | { ok: true; code: string; percent: number; amount: number; minSubtotal: number; firstOrderOnly: boolean; bundle?: BundleRule }
-  | { ok: false; reason: 'unknown' | 'min' | 'used' | 'bundle'; minSubtotal?: number; bundle?: BundleRule };
+  | { ok: true; code: string; percent: number; amount: number; minSubtotal: number; firstOrderOnly: boolean; only?: ScopeRule }
+  | { ok: false; reason: 'unknown' | 'min' | 'used' | 'scope'; minSubtotal?: number; only?: ScopeRule };
 
 /** Czy ten e-mail ma już opłacone zamówienie (przegląda ostatnie płatności w Mollie). */
 export async function hasPaidBefore(email: string): Promise<boolean> {
@@ -62,20 +62,20 @@ export async function hasPaidBefore(email: string): Promise<boolean> {
 
 /**
  * Sprawdza kod dla danej wartości produktów. E-mail podaj, gdy trzeba sprawdzić „tylko pierwsze zamówienie”.
- * Koszyk podaj przy płatności: kod pakietowy liczy rabat z koszyka i bez wymaganych sztuk jest odrzucany.
- * Bez koszyka (podgląd) kod pakietowy jest przyjmowany z kwotą 0 – kwotę liczy wtedy przeglądarka.
+ * Koszyk podaj przy płatności: kod „na wybrane produkty” liczy rabat z koszyka i bez tych produktów jest odrzucany.
+ * Bez koszyka (podgląd) taki kod jest przyjmowany z kwotą 0 – kwotę liczy wtedy przeglądarka.
  */
-export async function checkDiscount(raw: unknown, subtotal: number, email?: string, cart?: BundleLine[]): Promise<DiscountCheck> {
+export async function checkDiscount(raw: unknown, subtotal: number, email?: string, cart?: ScopeLine[]): Promise<DiscountCheck> {
   // porównujemy same litery i cyfry: „miro sw”, „MIROSW”, „Miro-SW” = MIRO_SW
   const key = normalizeCode(raw).replace(/[^A-Z0-9]/g, '');
   const d = key ? DISCOUNT_CODES.find(c => c.active && c.code.replace(/[^A-Z0-9]/g, '') === key) : undefined;
   if (!d) return { ok: false, reason: 'unknown' };
   if (subtotal < d.minSubtotal) return { ok: false, reason: 'min', minSubtotal: d.minSubtotal };
   if (d.firstOrderOnly && email && (await hasPaidBefore(email))) return { ok: false, reason: 'used' };
-  if (d.bundle) {
-    const amount = cart ? bundleAmount(d.bundle, cart) : 0;
-    if (cart && amount <= 0) return { ok: false, reason: 'bundle', bundle: d.bundle };
-    return { ok: true, code: d.code, percent: 0, amount, minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly, bundle: d.bundle };
+  if (d.only) {
+    const amount = cart ? scopedAmount(d.only, d.percent, cart) : 0;
+    if (cart && amount <= 0) return { ok: false, reason: 'scope', only: d.only };
+    return { ok: true, code: d.code, percent: d.percent, amount, minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly, only: d.only };
   }
   return { ok: true, code: d.code, percent: d.percent, amount: round2((subtotal * d.percent) / 100), minSubtotal: d.minSubtotal, firstOrderOnly: !!d.firstOrderOnly };
 }
